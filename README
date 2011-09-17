@@ -1,0 +1,17 @@
+bilge-katalog is cataloging file's infos for founding where is file(s).
+
+Requirements:
+-Python >= 2.6
+-PyQt4
+-PyQt4-devel(for installing)
+
+Installation:
+-building command:
+    python setup.py build
+-installing command:
+    python setup.py install
+-removing build files command:
+    python setup.py remove
+
+Translations:
+-bilge-katalog is not ready for translating.
