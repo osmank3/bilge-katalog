@@ -21,8 +21,8 @@ class database(SampleDB):
             
             if creating:
                 self.cur.execute("""CREATE TABLE items (\
-                                    id INTEGER PRIMARY KEY AUTOINCREMENT,\
-                                    up_id INTEGER,\
+                                    no INTEGER PRIMARY KEY AUTOINCREMENT,\
+                                    upno INTEGER,\
                                     name TEXT,\
                                     dateadd TIMESTAMP,\
                                     size INTEGER,\

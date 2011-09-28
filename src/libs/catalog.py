@@ -4,16 +4,20 @@
 import os
 
 class Item(object):
-    def __init__(self, no=None, address=None):
+    def __init__(self, no=None infos=None, address=None):
         self.no = no
         self.real_address = address
-        
-        self.upno = None
-        self.name = None
-        self.form = None
-        self.size = 0
-        self.dateadd = None
         self.relative_address = None
+        
+        if infos:
+            for i in infos.keys():
+                setattr(self, i, infos[i])
+        else:
+            self.upno = None
+            self.name = None
+            self.form = None
+            self.size = 0
+            self.dateadd = None
     
     def getRealInfo(self, address=None):
         if address:
@@ -33,45 +37,49 @@ class Item(object):
                 self.form = "directory"
         else:
             return False
+            
+    def getRelativeAddress(self, database):
+        if self.upno and database:
+            upno = self.upno
+            self.relative_address = ""
+            while upno != 0:
+                request = database.get("items", [{"no":upno}])
+                if len(request) == 1:
+                    infos = request[0]
+                    upno = infos["upno"]
+                    self.relative_address = os.sep + infos["name"] + self.relative_address
+                else: #There is no possibility :D
+                    pass
+        else:
+            return False
     
     def getDbInfo(self, database, no=None):
         if no:
             self.no = no
         
         if self.no and database:
-            database.cur.execute("""SELECT * FROM items
-                                    WHERE id = "%s" """% self.no)
-            infos = database.cur.fetchone()
-            self.upno = infos[1]
-            self.name = infos[2]
-            self.dateadd = infos[3]
-            self.size = infos[4]
-            self.form = infos[5]
+            request = database.get("items", [{"no":self.no}])
+            if len(request) == 1:
+                infos = request[0]
+                for i in infos.keys():
+                    setattr(self, i, infos[i])
             
-            addressList = []
-            upno = self.upno
-            self.relative_address = ""
-            while upno != 0:
-                database.cur.execute("""SELECT up_id, name FROM items
-                                        WHERE id = "%s" """% upno)
-                infos = database.cur.fetchone()
-                upno = infos[0]
-                addressList.append(infos[1])
-            
-            for i in addressList.reverse():
-                self.relative_address += (i + os.sep)
+                self.getRelativeAddress(database)
+            else:
+                return False
         else:
             return False
             
     def insert2Db(self, database):
         if self.upno and self.name and self.form:
-            database.cur.execute("""INSERT INTO items (up_id, name, size, form)
-                                    VALUES ( "{upno}", "{name}", "{size}", "{form}" )
-                                    """.format(**self.__dict__))
+            row = { "upno":self.upno, "name":self.name,
+                    "size":self.size, "form":self.form  }
+            database.insert("items", row)
             
-            database.cur.execute("""SELECT max(id) FROM items""")
-            self.no = database.cur.fetchone[0]
-            self.getDbInfo()
+            request = database.get("items", order=["no"])
+            self.getDbInfo(database, request[-1]["no"])
+            
+            return True
         else:
             return False
 
@@ -99,13 +107,10 @@ class Explore(object):
         else:
             dirNo = self.curItem.no
             
-        self.db.cur.execute("""SELECT id FROM items
-                                WHERE up_id = "%s"
-                                ORDER BY form"""% dirNo)
-        
-        for i in self.db.cur.fetchall():
-            newItem = Item(no=i[0])
-            newItem.getDbInfo(database=self.db)
+        request = self.db.get("items", [{"upno":dirNo}], ["form"])
+        for i in request:
+            newItem = Item(infos=i)
+            newItem.getRelativeAddress(self.db)
             
             itemList.append(newItem)
         

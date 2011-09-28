@@ -46,8 +46,8 @@ class database(SampleDB):
         if not self.mounted:
             return
         self.cur.execute("""CREATE TABLE IF NOT EXISTS items (\
-                            id INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,\
-                            up_id INT NOT NULL ,\
+                            no INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,\
+                            upno INT NOT NULL ,\
                             name TEXT NOT NULL ,\
                             dateadd TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\
                             size INT NOT NULL DEFAULT  '0',\
