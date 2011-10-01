@@ -43,9 +43,9 @@ class Item(object):
             upno = self.upno
             self.relative_address = ""
             while upno != 0:
-                request = database.get("items", [{"no":upno}])
-                if len(request) == 1:
-                    infos = request[0]
+                results = database.get("items", [{"no":upno}])
+                if len(results) == 1:
+                    infos = results[0]
                     upno = infos["upno"]
                     self.relative_address = os.sep + infos["name"] + self.relative_address
                 else: #There is no possibility :D
@@ -58,14 +58,14 @@ class Item(object):
             self.no = no
         
         if self.no and database:
-            request = database.get("items", [{"no":self.no}])
-            if len(request) == 1:
-                infos = request[0]
+            results = database.get("items", [{"no":self.no}])
+            if len(results) == 1:
+                infos = results[0]
                 for i in infos.keys():
                     setattr(self, i, infos[i])
             
                 self.getRelativeAddress(database)
-            else:
+            else: #There is no possibility :D
                 return False
         else:
             return False
@@ -76,8 +76,8 @@ class Item(object):
                     "size":self.size, "form":self.form  }
             database.insert("items", row)
             
-            request = database.get("items", order=["no"])
-            self.getDbInfo(database, request[-1]["no"])
+            results = database.get("items", order=["no"])
+            self.getDbInfo(database, results[-1]["no"])
             
             return True
         else:
@@ -107,8 +107,8 @@ class Explore(object):
         else:
             dirNo = self.curItem.no
             
-        request = self.db.get("items", [{"upno":dirNo}], ["form"])
-        for i in request:
+        results = self.db.get("items", [{"upno":dirNo}], ["form"])
+        for i in results:
             newItem = Item(infos=i)
             newItem.getRelativeAddress(self.db)
             
@@ -136,9 +136,9 @@ class Explore(object):
             self.curItem = RootItem()
             self.refresh()
 
-def insertAll2Db(item, progressItem):
+def insertAll2Db(item, database, progressItem):
     item.getRealInfo()
-    if item.insert2Db():
+    if item.insert2Db(database):
         try:
             progressItem.increase()
         except AttributeError:
@@ -150,6 +150,6 @@ def insertAll2Db(item, progressItem):
                 newItem = Item(address = address)
                 newItem.upno = item.no
                 
-                insertAll2Db(newItem, progressItem)
+                insertAll2Db(newItem, database, progressItem)
     else:
         return False
