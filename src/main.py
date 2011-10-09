@@ -34,7 +34,7 @@ def startApp():
     getPlugins(plug_api)
     
     win.show()
-    sys.exit(app.exec_())
+    app.exec_()#sys.exit(app.exec_())
 
 def getPlugins(api):
     pass

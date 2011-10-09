@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
 
+import os
 import sqlite3
-from database import SampleDB
+from sampledb import SampleDB
 
 class database(SampleDB):
     def __init__(self):
@@ -70,17 +71,17 @@ class database(SampleDB):
             keytype = info["type"]
             query += "%s %s "% (i, keytype)
             
-            if info.has_key("auto") and info["auto"] == True:
-                query += "AUTOINCREMENT "
-            
             if info.has_key("primary") and info["primary"] == True:
                 query += "PRIMARY KEY "
+            
+            if info.has_key("auto") and info["auto"] == True:
+                query += "AUTOINCREMENT "
                 
             if info.has_key("default"):
                 query += "DEFAULT %s "% info["default"]
             
             query += ", "
         
-        query += ")"
+        query = query[:-2] + ")"
         
         self.cur.execute(query)
