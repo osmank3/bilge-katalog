@@ -9,7 +9,11 @@ class database(SampleDB):
         SampleDB.__init__(self)
         
     def mount(self, config):
-        """function for connecting database with configuration"""
+        """
+        function for connecting database with configuration
+        
+        config : database configuration dictionary
+        """
         try:
             self.db = MySQLdb.connect(  host = config.mysqlServer,
                                         user = config.mysqlUserName,
@@ -21,7 +25,11 @@ class database(SampleDB):
             raise Exception(e[0], e[1])
             
     def createUserAndTable(self, config):
-        """function for creating new user and database on mysql server."""
+        """
+        function for creating new user and database on mysql server.
+        
+        config : database configuration dictionary
+        """
         if not self.mounted:
             return
         self.cur.execute("""CREATE USER {mysqlUserName}@{mysqlServer}\
@@ -45,20 +53,30 @@ class database(SampleDB):
         """function for creating tables on database"""
         if not self.mounted:
             return
-        self.cur.execute("""CREATE TABLE IF NOT EXISTS items (\
-                            no INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,\
-                            upno INT NOT NULL ,\
-                            name TEXT NOT NULL ,\
-                            dateadd TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\
-                            size INT NOT NULL DEFAULT  '0',\
-                            form ENUM(  "file",  "directory" ) NOT NULL )""")
-        self.cur.execute("""CREATE TABLE IF NOT EXISTS config (\
-                            key VARCHAR( 64 ) NOT NULL PRIMARY KEY ,\
-                            value TEXT NOT NULL )""")
+        self.createTable("items", {
+                            "no":{"type":"INT", "auto":True, "primary":True},
+                            "upno":{"type":"INT"},
+                            "name":{"type":"TEXT"},
+                            "dateadd":{"type":"TIMESTAMP","default":"CURRENT_TIMESTAMP"},
+                            "size":{"type":"INT","default":"'0'"},
+                            "form":{"type":"""ENUM(  "file",  "directory" )"""}
+                            }
+                        )
+        self.createTable("config", {
+                            "key":{"type":"VARCHAR( 64 )", "primary":True},
+                            "value":{"type":"TEXT"}
+                            }
+                        )
         self.db.commit()
     
     def getkeys(self, table):
-        """function for taking column names from database"""
+        """
+        function for taking column names from database
+        
+        table : ""
+        
+        returned : []
+        """
         if not self.mounted:
             return
         
@@ -69,3 +87,41 @@ class database(SampleDB):
             keys.append(i[0])
         
         return keys
+    
+    def createTable(self, table, keys):
+        """
+        function for creating table on database
+        
+        table : ""
+        keys : {"key":{ "type":"TYPE","null":False,"auto":False,
+                        "primary":False,"default":"DEFAULT"     }, ...}
+        """
+        if not self.mounted:
+            return
+        
+        query = "CREATE TABLE IF NOT EXISTS %s ("% table
+            
+        for i in keys.keys():
+            info = keys[i]
+            keytype = info["type"]
+            query += "%s %s "% (i, keytype)
+            
+            if info.has_key("null") and info["null"] == True:
+                query += "NULL "
+            else:
+                query += "NOT NULL "
+            
+            if info.has_key("auto") and info["auto"] == True:
+                query += "AUTO_INCREMENT "
+            
+            if info.has_key("primary") and info["primary"] == True:
+                query += "PRIMARY KEY "
+                
+            if info.has_key("default"):
+                query += "DEFAULT %s "% info["default"]
+            
+            query += ", "
+        
+        query += ")"
+        
+        self.cur.execute(query)

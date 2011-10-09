@@ -4,7 +4,7 @@
 import os
 
 class Item(object):
-    def __init__(self, no=None infos=None, address=None):
+    def __init__(self, no=None, infos=None, address=None):
         self.no = no
         self.real_address = address
         self.relative_address = None

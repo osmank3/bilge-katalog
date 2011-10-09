@@ -124,9 +124,11 @@ class SampleDB(object):
         query = "SELECT * FROM %s "% table
         if where != None and type(where) == list:
             query += "WHERE "
+            if type(where) == dict:
+                where = [where]
             for i in where:
                 if type(i) == dict:
-                    query + = " ( "
+                    query += " ( "
                     n = 0
                     for j in i.keys():
                         if n != 0:
@@ -139,7 +141,7 @@ class SampleDB(object):
                         elif type(i[j]) == str:
                             query += "%s = '%s' "% (j, i[j])
                         n += 1
-                    query + = " ) "
+                    query += " ) "
                 elif type(i) == str:
                     query += "%s "% i
         
@@ -192,7 +194,7 @@ class SampleDB(object):
     
     def update(self, table, row, where):
         """
-        function
+        function for updating the row where on the database
         
         table : ""
         row : {"key":"value", ...}
@@ -206,39 +208,11 @@ class SampleDB(object):
         for i in row.keys():
             setlist.append("%s = '%s'"% (i, row[i]))
         query += ", ".join(setlist) + " WHERE "
+        if type(where) == dict:
+            where = [where]
         for i in where:
             if type(i) == dict:
-                query + = " ( "
-                n = 0
-                for j in i.keys():
-                    if n != 0:
-                        query += "AND "
-                    if type(i[j]) == list:
-                        if i[j][0].lower() == "like":
-                            query += "{0} LIKE '%{1}%' ".format(j, i[j][1])
-                        else:
-                            query += "%s %s '%s' "% (j, i[j][0], i[j][1])
-                    elif type(i[j]) == str:
-                        query += "%s = '%s' "% (j, i[j])
-                    n += 1
-                query + = " ) "
-            elif type(i) == str:
-                query += "%s "% i
-        
-        self.cur.execute(query)
-    
-    def delete(self, table, where):
-        """
-        table : ""
-        where : [{"key":["like or =","value"] or "value"},"AND or OR", ...]
-        """
-        if not self.mounted:
-            return
-        
-        query = "DELETE FROM %s WHERE "% table
-        for i in where:
-            if type(i) == dict:
-                query + = " ( "
+                query += " ( "
                 n = 0
                 for j in i.keys():
                     if n != 0:
@@ -256,3 +230,47 @@ class SampleDB(object):
                 query += "%s "% i
         
         self.cur.execute(query)
+    
+    def delete(self, table, where):
+        """
+        function for deleting anything from database
+        
+        table : ""
+        where : [{"key":["like or =","value"] or "value"},"AND or OR", ...]
+        """
+        if not self.mounted:
+            return
+        
+        query = "DELETE FROM %s WHERE "% table
+        if type(where) == dict:
+            where = [where]
+        for i in where:
+            if type(i) == dict:
+                query += " ( "
+                n = 0
+                for j in i.keys():
+                    if n != 0:
+                        query += "AND "
+                    if type(i[j]) == list:
+                        if i[j][0].lower() == "like":
+                            query += "{0} LIKE '%{1}%' ".format(j, i[j][1])
+                        else:
+                            query += "%s %s '%s' "% (j, i[j][0], i[j][1])
+                    elif type(i[j]) == str:
+                        query += "%s = '%s' "% (j, i[j])
+                    n += 1
+                query += " ) "
+            elif type(i) == str:
+                query += "%s "% i
+        
+        self.cur.execute(query)
+    
+    def createTable(self, table, keys):
+        """
+        function for creating table on database
+        
+        table : ""
+        keys : {"key":{ "type":"TYPE","null":False,"auto":False,
+                        "primary":False,"default":"DEFAULT"     }, ...}
+        """    
+        pass

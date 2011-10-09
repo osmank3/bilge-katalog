@@ -20,16 +20,20 @@ class database(SampleDB):
             self.mounted = True
             
             if creating:
-                self.cur.execute("""CREATE TABLE items (\
-                                    no INTEGER PRIMARY KEY AUTOINCREMENT,\
-                                    upno INTEGER,\
-                                    name TEXT,\
-                                    dateadd TIMESTAMP,\
-                                    size INTEGER,\
-                                    form TEXT)""")
-                self.cur.execute("""CREATE TABLE config (\
-                                    key TEXT PRIMARY KEY,\
-                                    value TEXT)""")
+                self.createTable("items", {
+                                    "no":{"type":"INTEGER", "auto":True, "primary":True},
+                                    "upno":{"type":"INTEGER"},
+                                    "name":{"type":"TEXT"},
+                                    "dateadd":{"type":"TIMESTAMP",},
+                                    "size":{"type":"INTEGER",},
+                                    "form":{"type":"TEXT"}
+                                    }
+                                )
+                self.createTable("config", {
+                                    "key":{"type":"TEXT", "primary":True},
+                                    "value":{"type":"TEXT"}
+                                    }
+                                )
                 self.db.commit()
                 
         except Exception, e:
@@ -47,3 +51,36 @@ class database(SampleDB):
             keys.append(i[1])
         
         return keys
+    
+    def createTable(self, table, keys):
+        """
+        function for creating table on database
+        
+        table : ""
+        keys : {"key":{ "type":"TYPE","null":False,"auto":False,
+                        "primary":False,"default":"DEFAULT"     }, ...}
+        """
+        if not self.mounted:
+            return
+        
+        query = "CREATE TABLE %s ("% table
+            
+        for i in keys.keys():
+            info = keys[i]
+            keytype = info["type"]
+            query += "%s %s "% (i, keytype)
+            
+            if info.has_key("auto") and info["auto"] == True:
+                query += "AUTOINCREMENT "
+            
+            if info.has_key("primary") and info["primary"] == True:
+                query += "PRIMARY KEY "
+                
+            if info.has_key("default"):
+                query += "DEFAULT %s "% info["default"]
+            
+            query += ", "
+        
+        query += ")"
+        
+        self.cur.execute(query)
