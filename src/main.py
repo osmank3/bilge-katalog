@@ -10,12 +10,25 @@ reload(sys).setdefaultencoding("utf-8")
 import libs.database as database
 import libs.catalog as catalog
 import window
+import firstconfig
 import api
 
 def startApp():
     config = database.ConfigForDb()
     if config.readConfig() == False:
-        return #burada bir ayar penceresi açılsın ve ayar yaptırsın
+        confApp = firstconfig.QtGui.QApplication(sys.argv)
+        dialog = firstconfig.configForm(config)
+        dialog.show()
+        confApp.exec_()
+        
+        del confApp
+        del dialog
+        
+        config.writeConfig()
+        
+        if config.readConfig() == False:
+            print _("Configuration file could not read!")
+            return
     
     try:
         db = database.mountDb(config)

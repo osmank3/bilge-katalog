@@ -63,6 +63,9 @@ class ConfigForDb(object):
 
     def writeConfig(self):
         """Writing configuration to file."""
+        if not os.path.exists(os.path.split(self.confFileAddress)[0]):
+            os.mkdir(os.path.split(self.confFileAddress)[0])
+        
         confFile = open(self.confFileAddress, "w")
         
         confFile.write(self.confFileHeader)
