@@ -10,14 +10,15 @@ reload(sys).setdefaultencoding("utf-8")
 import libs.database as database
 import libs.catalog as catalog
 import window
-import firstconfig
+import dialogs
 import api
 
 def startApp():
     config = database.ConfigForDb()
     if config.readConfig() == False:
-        confApp = firstconfig.QtGui.QApplication(sys.argv)
-        dialog = firstconfig.configForm(config)
+        confApp = dialogs.QtGui.QApplication(sys.argv)
+        dialog = dialogs.forms()
+        dialog.setForConfig(config)
         dialog.show()
         confApp.exec_()
         
