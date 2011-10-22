@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>Dialog</class>
  <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>374</width>
+    <height>240</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string/>
   </property>
@@ -169,7 +177,11 @@ Please start it and try again or close the application</string>
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QLineEdit" name="ap_upassLine"/>
+           <widget class="QLineEdit" name="ap_upassLine">
+            <property name="echoMode">
+             <enum>QLineEdit::Password</enum>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -178,7 +190,7 @@ Please start it and try again or close the application</string>
      </widget>
      <widget class="QWidget" name="confPage">
       <layout class="QGridLayout" name="gridLayout_7">
-       <item row="0" column="0" colspan="2">
+       <item row="0" column="0" colspan="3">
         <widget class="QLabel" name="label_14">
          <property name="text">
           <string>It seems that the software running for the first time.
@@ -190,7 +202,7 @@ Please start by selecting your database from below</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="0" colspan="2">
+       <item row="1" column="0" colspan="3">
         <widget class="QGroupBox" name="groupBox_2">
          <property name="title">
           <string>Databases:</string>
@@ -230,6 +242,16 @@ Please start by selecting your database from below</string>
         </spacer>
        </item>
        <item row="2" column="1">
+        <widget class="QPushButton" name="cp_backButton">
+         <property name="visible">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>Back</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
         <widget class="QPushButton" name="cp_nextButton">
          <property name="text">
           <string>Next</string>
@@ -453,22 +475,6 @@ Please start by selecting your database from below</string>
     <hint type="destinationlabel">
      <x>270</x>
      <y>168</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>msp_closeButton</sender>
-   <signal>clicked()</signal>
-   <receiver>Dialog</receiver>
-   <slot>reject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>243</x>
-     <y>229</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>369</x>
-     <y>158</y>
     </hint>
    </hints>
   </connection>

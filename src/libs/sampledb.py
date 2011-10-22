@@ -54,7 +54,7 @@ class SampleDB(object):
                                 query += "{0} LIKE '%{1}%' ".format(j, i[j][1])
                             else:
                                 query += "%s %s '%s' "% (j, i[j][0], i[j][1])
-                        elif type(i[j]) == str:
+                        elif type(i[j]) in [str,int]:
                             query += "%s = '%s' "% (j, i[j])
                         n += 1
                     query += " ) "

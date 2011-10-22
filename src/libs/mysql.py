@@ -19,14 +19,14 @@ class database(SampleDB):
                                         user = config.mysqlUserName,
                                         passwd = config.mysqlUserPass,
                                         db = config.mysqlDbName    )
-            self.cur = self.db
+            self.cur = self.db.cursor()
             self.mounted = True
         except MySQLdb.Error, e:
             raise Exception(e[0], e[1])
             
-    def createUserAndTable(self, config):
+    def createUser(self, config):
         """
-        function for creating new user and database on mysql server.
+        function for creating new user on mysql server.
         
         config : database configuration dictionary
         """
@@ -42,11 +42,22 @@ class database(SampleDB):
                             MAX_UPDATES_PER_HOUR 0\
                             MAX_USER_CONNECTIONS 0\
                             """.format(**config.__dict__))
+        self.db.commit()
+            
+    def createDatabase(self, config):
+        """
+        function for creating new database on mysql server.
+        
+        config : database configuration dictionary
+        """
+        if not self.mounted:
+            return
         self.cur.execute("""CREATE DATABASE IF NOT EXISTS {mysqlDbName}\
                             """.format(**config.__dict__))
         self.cur.execute("""GRANT ALL PRIVILEGES ON {mysqlDbName}.* TO\
                             {mysqlUserName}@{mysqlServer}\
                             """.format(**config.__dict__))
+        self.cur.execute("use {mysqlDbName}".format(**config.__dict__))
         self.db.commit()
 
     def prepareTable(self):
@@ -104,7 +115,7 @@ class database(SampleDB):
         for i in keys.keys():
             info = keys[i]
             keytype = info["type"]
-            query += "%s %s "% (i, keytype)
+            query += "`%s` %s "% (i, keytype)
             
             if info.has_key("null") and info["null"] == True:
                 query += "NULL "

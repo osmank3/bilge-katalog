@@ -12,10 +12,11 @@ from PyQt4 import QtGui
 from ui_window import Ui_MainWindow
 
 class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
-    def __init__(self):
+    def __init__(self, explore):
         QtGui.QMainWindow.__init__(self)
         self.setupUi(self)
         
+        self.exp = explore
         self.setToolBars()
     
     def setToolBars(self):
@@ -40,6 +41,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 #testing lines start in here
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
-    window = MainWindow()
+    window = MainWindow(None)
     window.show()
     sys.exit(app.exec_())

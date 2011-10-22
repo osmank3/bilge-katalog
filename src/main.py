@@ -14,31 +14,15 @@ import dialogs
 import api
 
 def startApp():
-    config = database.ConfigForDb()
-    if config.readConfig() == False:
-        confApp = dialogs.QtGui.QApplication(sys.argv)
-        dialog = dialogs.forms()
-        dialog.setForConfig(config)
-        dialog.show()
-        confApp.exec_()
-        
-        del confApp
-        del dialog
-        
-        config.writeConfig()
-        
-        if config.readConfig() == False:
-            print _("Configuration file could not read!")
-            return
+    #get database object
+    db = getDatabase()
     
-    try:
-        db = database.mountDb(config)
-    except Exception, e:
-        return #burada da hata ile ilgili bir diyalog penceresi iş görür
+    #exploring database
+    exp = catalog.Explore(db)
     
     #creating gui
     app = window.QtGui.QApplication(sys.argv)
-    win = window.MainWindow()
+    win = window.MainWindow(exp)
     
     #create api
     db_api = api.db_api(db)
@@ -49,6 +33,53 @@ def startApp():
     
     win.show()
     app.exec_()#sys.exit(app.exec_())
+    
+def getDatabase():
+    confApp = dialogs.QtGui.QApplication(sys.argv)
+    dialog = dialogs.forms()
+    
+    maxturn = 5
+    turn = 0
+    
+    while turn < maxturn:
+        turn += 1
+        
+        exception = None
+        
+        config = database.ConfigForDb()
+        if config.readConfig() == False:
+            exception = "config"
+            dialog.setForConfig(config)
+        else:
+            try:
+                db = database.mountDb(config)
+            except Exception, e:
+                if e[0] == 2002:
+                    exception = "server"
+                    dialog.setForMysqlServer(config)
+                if e[0] in [1044,1045,1049]:
+                    exception = "create"
+                    dialog.setForMysqlCreate(config, database)
+                else:
+                    exception = e
+                    db = None
+        
+        if exception:
+            if exception not in ["config","create"]:
+                dialog.setForException(exception)
+                turn = maxturn
+                
+            dialog.show()
+            confApp.exec_()
+            
+            if exception in ["config","create"]:
+                config.writeConfig()
+        
+        else:
+            return db
+            
+        if turn == maxturn:
+            sys.exit()
 
 def getPlugins(api):
     pass

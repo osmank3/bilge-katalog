@@ -18,9 +18,11 @@ class forms(QtGui.QDialog, Ui_Dialog):
         
         #signals
         self.connect(self.mcp_nextButton, QtCore.SIGNAL("clicked()"), self.mcp_next)
+        self.connect(self.msp_closeButton, QtCore.SIGNAL("clicked()"), self.msp_close)
         self.connect(self.msp_tryButton, QtCore.SIGNAL("clicked()"), self.msp_try)
         self.connect(self.ap_backButton, QtCore.SIGNAL("clicked()"), self.ap_back)
         self.connect(self.ap_createButton, QtCore.SIGNAL("clicked()"), self.ap_create)
+        self.connect(self.cp_backButton, QtCore.SIGNAL("clicked()"), self.cp_back)
         self.connect(self.cp_nextButton, QtCore.SIGNAL("clicked()"), self.cp_next)
         self.connect(self.sp_addressButton, QtCore.SIGNAL("clicked()"), self.sp_address)
         self.connect(self.sp_backButton, QtCore.SIGNAL("clicked()"), self.sp_back)
@@ -33,26 +35,81 @@ class forms(QtGui.QDialog, Ui_Dialog):
     #signal's functions
     def mcp_next(self):
         if self.mcp_changeRadio.isChecked():
-            pass#stackwidget ilgili sayfayı gösterecek
-        elif self.mcp_authRadio.isChecked():
-            self.stackWidget.setCurrentWidget(self.authPage)
-        elif self.mcp_yourselfRadio.isChecked():
-            pass#stackwidget ilgili sayfayı gösterecek
+            self.cp_backButton.setVisible(True)
+            self.stackedWidget.setCurrentWidget(self.confPage)
             
+        elif self.mcp_authRadio.isChecked():
+            self.stackedWidget.setCurrentWidget(self.authPage)
+            
+        elif self.mcp_yourselfRadio.isChecked():
+            #set buttons visibility
+            self.mp_tryButton.setVisible(True)
+            self.mp_defaultButton.setVisible(False)
+            self.mp_applyButton.setVisible(False)
+            
+            #set lines text and writability
+            self.mp_serverLine.setText(self.confObj.mysqlServer)
+            self.mp_serverLine.setReadOnly(True)
+            self.mp_unameLine.setText(self.confObj.mysqlUserName)
+            self.mp_unameLine.setReadOnly(True)
+            self.mp_upassLine.setText(self.confObj.mysqlUserPass)
+            self.mp_upassLine.setReadOnly(True)
+            self.mp_dbLine.setText(self.confObj.mysqlDbName)
+            self.mp_dbLine.setReadOnly(True)
+            
+            self.stackedWidget.setCurrentWidget(self.mysqlPage)
+            
+    def msp_close(self):
+        sys.exit()
+    
     def msp_try(self):
-        pass#mysql server'e bağlanılıp bağlanılmadığını kontrol edecek
+        self.close()
         
     def ap_back(self):
-        self.stackWidget.setCurrentWidget(self.mysqlCreatePage)
+        self.stackedWidget.setCurrentWidget(self.mysqlCreatePage)
         
     def ap_create(self):
-        pass#mysql'e yetkili ile bağlanıp yeni kullanıcı oluşturacak
+        config = self.database.ConfigForDb()
+        setattr(config,"dbType",self.confObj.dbType)
+        setattr(config,"mysqlServer",self.confObj.mysqlServer)
+        setattr(config,"mysqlUserName",str(self.ap_unameLine.text()))
+        setattr(config,"mysqlUserPass",str(self.ap_upassLine.text()))
+        setattr(config,"mysqlDbName","")
+        try:
+            db = self.database.mountDb(config)
+            try:
+                trydb = self.database.mountDb(self.confObj)
+            except Exception, e:
+                if e[0] == 1045:
+                    db.createUser(self.confObj)    
+            db.createDatabase(self.confObj)
+            db.prepareTable()
+            
+            self.close()
+        except Exception, e:
+            print e
+        
+    def cp_back(self):
+        self.stackedWidget.setCurrentWidget(self.mysqlCreatePage)
         
     def cp_next(self):
         if self.cp_sqliteRadio.isChecked():
             self.sp_addressLine.setText(os.path.join(os.environ["HOME"],".bilge-katalog","sqlitedb"))
             self.stackedWidget.setCurrentWidget(self.sqlitePage)
+            
         elif self.cp_mysqlRadio.isChecked():
+            #set buttons visibility
+            self.mp_tryButton.setVisible(False)
+            self.mp_defaultButton.setVisible(True)
+            self.mp_applyButton.setVisible(True)
+            
+            #set lines writability
+            self.mp_serverLine.setReadOnly(False)
+            self.mp_unameLine.setReadOnly(False)
+            self.mp_upassLine.setReadOnly(False)
+            self.mp_dbLine.setReadOnly(False)
+            
+            self.mp_default()
             self.stackedWidget.setCurrentWidget(self.mysqlPage)
             
     def sp_address(self):
@@ -78,11 +135,11 @@ class forms(QtGui.QDialog, Ui_Dialog):
         self.mp_dbLine.setText("bilgedb")
         
     def mp_try(self):
-        pass#mysql veritabanının bağlanılıp bağlanılmadığını kontrol edecek
+        self.close()
     
     def mp_back(self):
         if self.mp_tryButton.isVisible():
-            self.stackedWidget.setCurrentWidget(self.mysqlServerPage)
+            self.stackedWidget.setCurrentWidget(self.mysqlCreatePage)
         else:
             self.stackedWidget.setCurrentWidget(self.confPage)
         
@@ -97,21 +154,43 @@ class forms(QtGui.QDialog, Ui_Dialog):
         
     #signal's functions end
     
+    def setForException(self, exception):
+        self.ep_text.setPlainText(str(exception))
+        self.stackedWidget.setCurrentWidget(self.exceptPage)
+
+    def setForMysqlCreate(self, conf, database):
+        self.confObj = conf
+        self.database = database
+        self.stackedWidget.setCurrentWidget(self.mysqlCreatePage)
+    
     def setForConfig(self, conf):
         self.confObj = conf
         self.stackedWidget.setCurrentWidget(self.confPage)
+        
+    def setForMysqlServer(self, conf):
+        self.confObj = conf
+        self.stackedWidget.setCurrentWidget(self.mysqlServerPage)
 
+
+#testing lines start in here
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     window = forms()
+    class config():
+        dbType = None
+        sqliteDbAddress = None
+        mysqlServer = ""
+        mysqlUserName = ""
+        mysqlUserPass = ""
+        mysqlDbName = ""
     if "config" in sys.argv:
-        class config():
-            dbType = None
-            sqliteDbAddress = None
-            mysqlServer = None
-            mysqlUserName = None
-            mysqlUserPass = None
-            mysqlDbName = None
         window.setForConfig(config())
+    elif "create" in sys.argv:
+        import libs.database as database
+        window.setForMysqlCreate(config(), database)
+    elif "server" in sys.argv:
+        window.setForMysqlServer(config())
+    else:
+        window.setForException(" ".join(sys.argv[1:]))
     window.show()
     sys.exit(app.exec_())
