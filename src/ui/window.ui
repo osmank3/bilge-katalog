@@ -240,9 +240,9 @@
     <string>Back</string>
    </property>
   </action>
-  <action name="actNext">
+  <action name="actForward">
    <property name="text">
-    <string>Next</string>
+    <string>Forward</string>
    </property>
   </action>
   <action name="actUp">

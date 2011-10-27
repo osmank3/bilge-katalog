@@ -18,7 +18,7 @@ def startApp():
     db = getDatabase()
     
     #exploring database
-    exp = catalog.Explore(db)
+    exp = catalog.Explorer(db)
     
     #creating gui
     app = window.QtGui.QApplication(sys.argv)
@@ -57,7 +57,7 @@ def getDatabase():
                 if e[0] == 2002:
                     exception = "server"
                     dialog.setForMysqlServer(config)
-                if e[0] in [1044,1045,1049]:
+                elif e[0] in [1044,1045,1049]:
                     exception = "create"
                     dialog.setForMysqlCreate(config, database)
                 else:
@@ -65,7 +65,7 @@ def getDatabase():
                     db = None
         
         if exception:
-            if exception not in ["config","create"]:
+            if exception not in ["server","config","create"]:
                 dialog.setForException(exception)
                 turn = maxturn
                 

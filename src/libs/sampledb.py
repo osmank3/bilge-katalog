@@ -38,7 +38,7 @@ class SampleDB(object):
         keys = self.getkeys(table)
         
         query = "SELECT * FROM %s "% table
-        if where != None and type(where) == list:
+        if where != None:
             query += "WHERE "
             if type(where) == dict:
                 where = [where]
@@ -54,7 +54,7 @@ class SampleDB(object):
                                 query += "{0} LIKE '%{1}%' ".format(j, i[j][1])
                             else:
                                 query += "%s %s '%s' "% (j, i[j][0], i[j][1])
-                        elif type(i[j]) in [str,int]:
+                        elif type(i[j]) in [str,int,long]:
                             query += "%s = '%s' "% (j, i[j])
                         n += 1
                     query += " ) "
@@ -62,6 +62,8 @@ class SampleDB(object):
                     query += "%s "% i
         
         if order != None:
+            if type(order) == str:
+                order = [order]
             query += "ORDER BY " + ", ".join(order)
         
         self.cur.execute(query)

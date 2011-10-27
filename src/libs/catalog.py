@@ -83,58 +83,120 @@ class Item(object):
         else:
             return False
 
-class RootItem(Item):
-    def __init__(self):
-        self.no = 0
-        self.upno = None
-        self.name = "ROOT"
-        self.form = "directory"
-        self.relative_address = "/"
+class ExploreObject(object):
+    def __init__(self, name, form="normal"):
+        self.name = name
+        self.form = form
+        self.history = []
+        self.index = -1
+        
+    def curItem(self):
+        if self.index >= 0:
+            return self.history[self.index]
+        else:
+            return None
+            
+    def forwardItem(self):
+        if len(self.history) > self.index + 1:
+            return self.history[self.index + 1]
+        else:
+            return None
+            
+    def backItem(self):
+        if self.index > 0:
+            return self.history[self.index - 1]
+        else:
+            return None
+            
+    def addHistory(self, item):
+        if len(self.history) > self.index + 1:
+            self.history = self.history[:self.index+1]
+        
+        self.history.append(item)
+        self.index += 1
+        
+    def back(self):
+        if self.index > 0:
+            self.index -= 1
+            
+    def forward(self):
+        if len(self.history) > self.index + 1:
+            self.index += 1
 
-class Explore(object):
+class Explorer(object):
     def __init__(self, database):
-        self.db = database
-        self.curItem = RootItem()
-        self.refresh()
-    
-    def refresh(self):
-        self.curItemList = self.fillList()
-    
-    def fillList(self, item=None):
+        self.__db = database
+        self.expObjList = []
+        self.expObj = self.newExp("main")
+        
+    def newExp(self, name, form="normal"):
+        for i in self.expObjList:
+            if i.name == name:
+                return i
+        
+        obj = ExploreObject(name, form)
+        self.expObjList.append(obj)
+        
+        return obj
+        
+    def changeExp(self, name):
+        new = True
+        for i in self.expObjList:
+            if i.name == name:
+                self.expObj = i
+                new = False
+                
+        if new:
+            self.expObj = self.newExp(name)
+        
+    def delExp(self, name):
+        n = 0
+        while n < len(self.expObjList):
+            if self.expObjList[n].name == name:
+                self.expObjList.pop(n)
+                break
+            n += 1
+            
+    def listOfDir(self, item=None):
         itemList = []
         if item:
-            dirNo = item.no
+            curItem = item
         else:
-            dirNo = self.curItem.no
+            curItem = self.expObj.curItem()
+        
+        if type(curItem) == None:
+            return []
             
-        results = self.db.get("items", [{"upno":dirNo}], ["form"])
+        results = self.__db.get("items", {"upno":curItem.no}, "form")
         for i in results:
             newItem = Item(infos=i)
-            newItem.getRelativeAddress(self.db)
+            newItem.getRelativeAddress(self.__db)
             
             itemList.append(newItem)
         
         return itemList
         
-    def chdir(self, item):
-        if item.name == "ROOT":
-            self.__init__()
-        elif item.form == "directory":
-            self.curItem = item
-            self.refresh()
-        else:
-            return False
-    
-    def turnUp(self):
-        if self.curItem.upno:
-            newItem = Item(no=self.curItem.upno)
-            newItem.getDbInfo(database=self.db)
+    def back(self):
+        self.expObj.back()
+        
+    def forward(self):
+        self.expObj.forward()
+        
+    def changeItem(self, item):
+        if self.expObj.backItem() and item.no == self.expObj.backItem().no:
+            self.back()
+        elif self.expObj.forwardItem() and item.no == self.expObj.forwardItem().no:
+            self.forward()
+        elif not self.expObj.curItem() or item.no != self.expObj.curItem().no:
+            self.expObj.addHistory(item)
             
-            self.curItem = newItem
-            self.refresh()
-        else:
-            self.curItem = RootItem()
-            self.refresh()
+    def up(self):
+        curItem = self.expObj.curItem()
+        if curItem and curItem.upno != 0:
+            newItem = Item(no=curItem.upno)
+            newItem.getDbInfo(database=self.__db)
+            
+            self.changeItem(newItem)
 
 def insertAll2Db(item, database, progressItem):
     item.getRealInfo()
