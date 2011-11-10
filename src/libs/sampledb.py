@@ -102,8 +102,8 @@ class SampleDB(object):
         keys = []
         values = []
         for i in row.keys():
-            keys.append(i)
-            values.append(row[i])
+            keys.append(str(i))
+            values.append(str(row[i]))
         
         query += "(%s) "% (", ".join(keys))
         query += "VALUES ('%s')"% ("', '".join(values))
@@ -140,7 +140,7 @@ class SampleDB(object):
                             query += "{0} LIKE '%{1}%' ".format(j, i[j][1])
                         else:
                             query += "%s %s '%s' "% (j, i[j][0], i[j][1])
-                    elif type(i[j]) == str:
+                    elif type(i[j]) in [str,int,long]:
                         query += "%s = '%s' "% (j, i[j])
                     n += 1
                 query += " ) "
@@ -174,7 +174,7 @@ class SampleDB(object):
                             query += "{0} LIKE '%{1}%' ".format(j, i[j][1])
                         else:
                             query += "%s %s '%s' "% (j, i[j][0], i[j][1])
-                    elif type(i[j]) == str:
+                    elif type(i[j]) in [str,int,long]:
                         query += "%s = '%s' "% (j, i[j])
                     n += 1
                 query += " ) "

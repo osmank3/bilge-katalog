@@ -70,7 +70,7 @@ class database(SampleDB):
                             "name":{"type":"TEXT"},
                             "dateadd":{"type":"TIMESTAMP","default":"CURRENT_TIMESTAMP"},
                             "size":{"type":"INT","default":"'0'"},
-                            "form":{"type":"""ENUM(  "file",  "directory" )"""}
+                            "form":{"type":"""ENUM( "directory", "file" )"""}
                             }
                         )
         self.createTable("config", {

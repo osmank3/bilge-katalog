@@ -21,6 +21,9 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.setToolBars()
         self.setSignals()
         
+        self.board = []
+        self.boardDo = None # "copy" or "cut"
+        
         self.setCatList()
         
     
@@ -44,16 +47,15 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.SearchBar.addWidget(self.searchButton)
         
     def setSignals(self):
-        pass
         self.actBack.triggered.connect(self.back)
         self.actForward.triggered.connect(self.forward)
         self.actUp.triggered.connect(self.up)
         self.actRefresh.triggered.connect(self.refresh)
         
-        #self.actDel.triggered.connect(self.delete)
-        #self.actCopy.triggered.connect(self.copy)
-        #self.actCut.triggered.connect(self.cut)
-        #self.actPaste.triggered.connect(self.paste)
+        self.actDel.triggered.connect(self.delete)
+        self.actCopy.triggered.connect(self.copy)
+        self.actCut.triggered.connect(self.cut)
+        self.actPaste.triggered.connect(self.paste)
         
         #self.actNewFile.triggered.connect(self.newFile)
         #self.actNewDir.triggered.connect(self.newDir)
@@ -118,6 +120,59 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             i.setSelected(False)
         if selectedItem:
             selectedItem.setSelected(True)
+    
+    def delete(self):
+        selecteds = []
+        for i in self.ExpList.selectedItems():
+            selecteds.append(i.item)
+        for i in self.CatList.selectedItems():
+            if len(selecteds) == 0:
+                selecteds.append(i.item)
+            
+        for i in selecteds:
+            i.delete()
+        
+        self.refresh()
+        
+    def copy(self):
+        selecteds = []
+        for i in self.ExpList.selectedItems():
+            selecteds.append(i.item)
+        for i in self.CatList.selectedItems():
+            if len(selecteds) == 0:
+                selecteds.append(i.item)
+            
+        self.board = selecteds[:]
+        self.boardDo = "copy"
+    
+    def cut(self):
+        selecteds = []
+        for i in self.ExpList.selectedItems():
+            selecteds.append(i.item)
+        for i in self.CatList.selectedItems():
+            if len(selecteds) == 0:
+                selecteds.append(i.item)
+            
+        self.board = selecteds[:]
+        self.boardDo = "cut"
+    
+    def paste(self):
+        if self.boardDo and self.board:
+            upno = self.exp.expObj.curItem().no
+            #*** developing **** edit when context menu is ready for using
+            for i in self.board:
+                if self.boardDo == "copy":
+                    i.copyInDb(upno)
+                    
+                elif self.boardDo == "cut":
+                    info = {"upno":upno}
+                    i.update(info)
+            
+            if self.boardDo == "cut":
+                self.board = []
+                self.boardDo = None
+            
+            self.refresh()
 
 
 #testing lines start in here
