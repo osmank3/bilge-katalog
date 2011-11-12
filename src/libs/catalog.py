@@ -137,12 +137,26 @@ class Item(object):
 
 class ExploreObject(object):
     def __init__(self, name, form="normal"):
+        """
+        exploring object init function
+        
+        name : ""
+        form : "normal" or "search"
+        """
         self.name = name
         self.form = form
         self.history = []
         self.index = -1
         
+        if self.form == "search":
+            self.searchList = []
+        
     def curItem(self):
+        """
+        function for getting current item on history
+        
+        returned : item object or None
+        """
         if self.index >= 0:
             return self.history[self.index]
         else:
@@ -168,7 +182,7 @@ class ExploreObject(object):
         self.index += 1
         
     def back(self):
-        if self.index > 0:
+        if self.index > 0 or (self.form == "search" and self.index > -1):
             self.index -= 1
             
     def forward(self):
@@ -216,7 +230,9 @@ class Explorer(object):
         else:
             curItem = self.expObj.curItem()
         
-        if type(curItem) == None:
+        if type(curItem) == type(None):
+            if self.expObj.form == "search":
+                return self.expObj.searchList
             return []
             
         results = self.__db.get("items", {"upno":curItem.no}, ["form","name"])
@@ -228,6 +244,18 @@ class Explorer(object):
         
         return itemList
         
+    def fillSearchList(self, text):
+        itemList = []
+        if self.expObj.form == "search":
+            results = self.__db.get("items", {"name":["like",text]}, ["form","name"])
+            for i in results:
+                newItem = Item(self.__db, infos=i)
+                newItem.getRelativeAddress(self.__db)
+                
+                itemList.append(newItem)
+            
+            self.expObj.searchList = itemList
+    
     def back(self):
         self.expObj.back()
         

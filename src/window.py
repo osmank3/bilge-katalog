@@ -40,7 +40,9 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.EditBar.addAction(self.actDel)
         
         self.searchLine = QtGui.QLineEdit()
+        self.searchLine.setEnabled(False)
         self.searchButton = QtGui.QPushButton()
+        self.searchButton.setCheckable(True)
         self.searchButton.setObjectName("searchButton")
         self.searchButton.setText(QtGui.QApplication.translate("MainWindow", "Search", None, QtGui.QApplication.UnicodeUTF8))
         self.SearchBar.addWidget(self.searchLine)
@@ -69,9 +71,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.connect(self.CatList, QtCore.SIGNAL("itemClicked(QListWidgetItem *)"), self.clickAction)
         self.connect(self.ExpList, QtCore.SIGNAL("itemClicked(QListWidgetItem *)"), self.clickAction)
         
-        #self.connect(self.searchButton, QtCore.SIGNAL("clicked()"), self.search)
-        #self.connect(self.searchLine, QtCore.SIGNAL("returnPressed()"), self.searchButton, QtCore.SLOT("click()"))
-        #self.connect(self.searchLine, QtCore.SIGNAL("textChanged(QString)"), self.searchButtonStatus)
+        self.connect(self.searchButton, QtCore.SIGNAL("toggled(bool)"), self.searching)
+        self.connect(self.searchLine, QtCore.SIGNAL("textChanged(QString)"), self.search)
         
     def setCatList(self, itemList=None):
         if itemList:
@@ -173,6 +174,31 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 self.boardDo = None
             
             self.refresh()
+            
+    def searching(self, status):
+        if status:
+            self.searchLine.setEnabled(True)
+            
+            self.expOldName = self.exp.expObj.name
+            self.exp.newExp("search","search")
+            self.exp.changeExp("search")
+            
+        else:
+            self.searchLine.setEnabled(False)
+            self.searchLine.clear()
+            
+            self.exp.changeExp(self.expOldName)
+            del self.expOldName
+        
+        self.refresh()
+        
+    def search(self, text):
+        if len(text) > 2:
+            self.exp.fillSearchList(str(text))
+        else:
+            self.exp.expObj.searchList = []
+        
+        self.refresh()
 
 
 #testing lines start in here
