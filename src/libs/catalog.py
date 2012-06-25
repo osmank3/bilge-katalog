@@ -29,7 +29,7 @@ class Item(object):
                 self.real_address = self.real_address[:-1]
             
             if not self.name:
-                self.name = os.path.split()[-1]
+                self.name = os.path.split(self.real_address)[-1]
             
             if os.path.isfile(self.real_address):
                 self.form = "file"
@@ -79,7 +79,7 @@ class Item(object):
     def insert2Db(self, database=None):
         if not database:
             database = self.__db
-        if self.upno and self.name and self.form:
+        if self.upno != None and self.name != None and self.form != None:
             row = { "upno":self.upno, "name":self.name,
                     "size":self.size, "form":self.form  }
             database.insert("items", row)
@@ -190,10 +190,13 @@ class ExploreObject(object):
             self.index += 1
 
 class Explorer(object):
-    def __init__(self, database):
-        self.__db = database
+    def __init__(self, bilge):
+        self.__db = bilge.db
         self.expObjList = []
         self.expObj = self.newExp("main")
+        
+    def ready(self):
+        return True
         
     def newExp(self, name, form="normal"):
         for i in self.expObjList:
@@ -286,12 +289,13 @@ def insertAll2Db(item, database, progressItem):
         except AttributeError:
             pass
         
-        if item.real_address:
+        if item.real_address and item.form == "directory":
             for i in os.listdir(item.real_address):
-                address = item.address + os.sep + i
+                address = item.real_address + os.sep + i
                 newItem = Item(database, address = address)
                 newItem.upno = item.no
                 
                 insertAll2Db(newItem, database, progressItem)
+        return True
     else:
         return False

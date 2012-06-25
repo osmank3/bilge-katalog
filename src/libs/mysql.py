@@ -18,7 +18,9 @@ class database(SampleDB):
             self.db = MySQLdb.connect(  host = config.mysqlServer,
                                         user = config.mysqlUserName,
                                         passwd = config.mysqlUserPass,
-                                        db = config.mysqlDbName    )
+                                        db = config.mysqlDbName,
+                                        charset = "utf8",
+                                        use_unicode = True    )
             self.cur = self.db.cursor()
             self.mounted = True
         except MySQLdb.Error, e:

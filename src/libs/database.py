@@ -56,7 +56,7 @@ class ConfigForDb(object):
                     continue
                 key, value = i.split(":")
                 if key.strip() in self.configKeys:
-                    setattr(self, key.strip(), value.strip())
+                    setattr(self, key.strip(), value.strip().replace("'","\\'"))
             return True
         else:
             return False

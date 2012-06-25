@@ -22,6 +22,9 @@ class SampleDB(object):
         """
         pass #after mounting self.mounted = True
         
+    def ready(self):
+        return self.mounted
+        
     def get(self, table, where=None, order=None):
         """
         function for taking data from database
@@ -51,10 +54,16 @@ class SampleDB(object):
                             query += "AND "
                         if type(i[j]) == list:
                             if i[j][0].lower() == "like":
+                                if type(i[j][1]) == str:
+                                    i[j][1] = i[j][1].replace("'","\\'")
                                 query += "{0} LIKE '%{1}%' ".format(j, i[j][1])
                             else:
+                                if type(i[j][1]) == str:
+                                    i[j][1] = i[j][1].replace("'","\\'")
                                 query += "%s %s '%s' "% (j, i[j][0], i[j][1])
                         elif type(i[j]) in [str,int,long]:
+                            if type(i[j]) == str:
+                                i[j] = i[j].replace("'","\\'")
                             query += "%s = '%s' "% (j, i[j])
                         n += 1
                     query += " ) "
@@ -103,12 +112,13 @@ class SampleDB(object):
         values = []
         for i in row.keys():
             keys.append(str(i))
-            values.append(str(row[i]))
+            values.append(str(row[i]).replace("'","\\'"))
         
         query += "(%s) "% (", ".join(keys))
         query += "VALUES ('%s')"% ("', '".join(values))
         
         self.cur.execute(query)
+        self.db.commit()
     
     def update(self, table, row, where):
         """
@@ -124,7 +134,7 @@ class SampleDB(object):
         query = "UPDATE %s SET "% table
         setlist = []
         for i in row.keys():
-            setlist.append("%s = '%s'"% (i, row[i]))
+            setlist.append("%s = '%s'"% (i, row[i]).replace("'","\\'"))
         query += ", ".join(setlist) + " WHERE "
         if type(where) == dict:
             where = [where]
@@ -137,10 +147,16 @@ class SampleDB(object):
                         query += "AND "
                     if type(i[j]) == list:
                         if i[j][0].lower() == "like":
+                            if type(i[j][1]) == str:
+                                i[j][1] = i[j][1].replace("'","\\'")
                             query += "{0} LIKE '%{1}%' ".format(j, i[j][1])
                         else:
+                            if type(i[j][1]) == str:
+                                i[j][1] = i[j][1].replace("'","\\'")
                             query += "%s %s '%s' "% (j, i[j][0], i[j][1])
                     elif type(i[j]) in [str,int,long]:
+                        if type(i[j]) == str:
+                            i[j] = i[j].replace("'","\\'")
                         query += "%s = '%s' "% (j, i[j])
                     n += 1
                 query += " ) "
@@ -171,10 +187,16 @@ class SampleDB(object):
                         query += "AND "
                     if type(i[j]) == list:
                         if i[j][0].lower() == "like":
+                            if type(i[j][1]) == str:
+                                i[j][1] = i[j][1].replace("'","\\'")
                             query += "{0} LIKE '%{1}%' ".format(j, i[j][1])
                         else:
+                            if type(i[j][1]) == str:
+                                i[j][1] = i[j][1].replace("'","\\'")
                             query += "%s %s '%s' "% (j, i[j][0], i[j][1])
                     elif type(i[j]) in [str,int,long]:
+                        if type(i[j]) == str:
+                            i[j] = i[j].replace("'","\\'")
                         query += "%s = '%s' "% (j, i[j])
                     n += 1
                 query += " ) "

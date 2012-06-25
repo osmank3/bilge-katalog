@@ -10,13 +10,15 @@ reload(sys).setdefaultencoding("utf-8")
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 from ui_window import Ui_MainWindow
+import createcat
 
 class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
-    def __init__(self, explore):
+    def __init__(self, bilge):
         QtGui.QMainWindow.__init__(self)
         self.setupUi(self)
         
-        self.exp = explore
+        self.bilge = bilge
+        self.exp = bilge.exp
         
         self.setToolBars()
         self.setSignals()
@@ -26,6 +28,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         
         self.setCatList()
         
+    def ready(self):
+        return True
     
     def setToolBars(self):
         """Adding toolbars actions"""
@@ -59,6 +63,9 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.actCut.triggered.connect(self.cut)
         self.actPaste.triggered.connect(self.paste)
         
+        self.actExit.triggered.connect(self.close)
+        
+        self.actNewCat.triggered.connect(self.createCat)
         #self.actNewFile.triggered.connect(self.newFile)
         #self.actNewDir.triggered.connect(self.newDir)
         
@@ -198,6 +205,12 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         else:
             self.exp.expObj.searchList = []
         
+        self.refresh()
+        
+    def createCat(self):
+        createDialog = createcat.CreateCat(self.bilge)
+        createDialog.exec_()
+        self.setCatList()
         self.refresh()
 
 
