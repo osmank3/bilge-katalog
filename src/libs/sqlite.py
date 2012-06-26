@@ -85,3 +85,4 @@ class database(SampleDB):
         query = query[:-2] + ")"
         
         self.cur.execute(query)
+        self.db.commit()

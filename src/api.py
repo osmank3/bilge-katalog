@@ -6,9 +6,9 @@ import sys
 #For using unicode utf-8
 reload(sys).setdefaultencoding("utf-8")
 
-class qt_api(object):
-    def __init__(self, window):
-        self.__window = window
+class disp_api(object):
+    def __init__(self, bilge):
+        self.__bilge = bilge
     
     def addMenu(self, ogeler):
         """"""
@@ -19,8 +19,8 @@ class qt_api(object):
         pass
         
 class db_api(object):
-    def __init__(self, database):
-        self.__db = database
+    def __init__(self, bilge):
+        self.__bilge = bilge
         
     def get(self, pluginName, table, where=None, order=None):
         """
@@ -78,6 +78,6 @@ class db_api(object):
         pass
 
 class plug_api(object):
-    def __init__(self, db, ui):
+    def __init__(self, db, disp):
         self.db = db
-        self.ui = ui
+        self.disp = disp

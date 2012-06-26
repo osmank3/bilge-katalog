@@ -134,7 +134,9 @@ class SampleDB(object):
         query = "UPDATE %s SET "% table
         setlist = []
         for i in row.keys():
-            setlist.append("%s = '%s'"% (i, row[i]).replace("'","\\'"))
+            if type(row[i]) == str:
+                row[i] = row[i].replace("'","\\'")
+            setlist.append("%s = '%s'"% (i, row[i]))
         query += ", ".join(setlist) + " WHERE "
         if type(where) == dict:
             where = [where]
@@ -164,6 +166,7 @@ class SampleDB(object):
                 query += "%s "% i
         
         self.cur.execute(query)
+        self.db.commit()
     
     def delete(self, table, where):
         """
@@ -204,6 +207,7 @@ class SampleDB(object):
                 query += "%s "% i
         
         self.cur.execute(query)
+        self.db.commit()
     
     def createTable(self, table, keys):
         """

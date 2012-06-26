@@ -20,6 +20,7 @@ class BilgeItem(object):
 class Bilge(object):
     def __init__(self, database=None):
         self.db = BilgeItem()
+        self.cat = BilgeItem()
         self.exp = BilgeItem()
         self.disp = BilgeItem()
         if database and database.ready():
@@ -30,6 +31,7 @@ class Bilge(object):
             self.db = database
         else:
             self.db = BilgeItem()
+            self.cat = BilgeItem()
             self.exp = BilgeItem()
             self.disp = BilgeItem()
             
@@ -39,6 +41,7 @@ class Bilge(object):
             self.cat.ready = lambda: True
         else:
             self.cat = BilgeItem()
+            self.exp = BilgeItem()
             self.disp = BilgeItem()
     
     def setExplorer(self, explorer):
@@ -55,42 +58,48 @@ class Bilge(object):
             self.disp = BilgeItem()
 
 def startApp():
+    app = window.QtGui.QApplication(sys.argv)
     #get database object
-    db = getDatabase()
+    db = getDatabase(app)
     bilge = Bilge(database=db)
     
     if bilge.db.ready():
         #catalog functions
         cat = catalog
         bilge.setCatalog(cat)
-        #exploring database
-        exp = catalog.Explorer(bilge)
-        bilge.setExplorer(exp)
-        
-        if bilge.exp.ready() and bilge.cat.ready():
-            #creating gui
-            app = window.QtGui.QApplication(sys.argv)
-            win = window.MainWindow(bilge)
-            bilge.setDisplay(win)
+        if bilge.cat.ready():
+            #exploring database
+            exp = bilge.cat.Explorer(bilge)
+            bilge.setExplorer(exp)
             
-            #create api
-            db_api = api.db_api(db)
-            qt_api = api.qt_api(win)
-            plug_api = api.plug_api(db_api, qt_api)
-            
-            getPlugins(plug_api)
-            
-            win.show()
-            app.exec_()#sys.exit(app.exec_())
+            if bilge.exp.ready() and bilge.cat.ready():
+                #creating gui
+                win = window.MainWindow(bilge)
+                bilge.setDisplay(win)
+                
+                #create api
+                db_api = api.db_api(bilge)
+                disp_api = api.disp_api(bilge)
+                plug_api = api.plug_api(db_api, disp_api)
+                
+                getPlugins(plug_api)
+                
+                win.show()
+                app.exec_()#sys.exit(app.exec_())
+            else:
+                print("Explorer error")
+                return 2
         else:
-            print("Explorer error")
+            print("Catalog module error")
             return 2
     else:
         print("Database error")
         return 2
     
-def getDatabase():
-    confApp = None
+def getDatabase(app=None):
+    if not app:
+        app = dialogs.QtGui.QApplication(sys.argv)
+    dialog = dialogs.forms()
     maxturn = 5
     turn = 0
     
@@ -100,21 +109,13 @@ def getDatabase():
         exception = None
         
         config = database.ConfigForDb()
-        if config.readConfig() == False:
-            if not confApp:
-                confApp = dialogs.QtGui.QApplication(sys.argv)
-                dialog = dialogs.forms()
-                
+        if config.readConfig() == False: 
             exception = "config"
             dialog.setForConfig(config)
         else:
             try:
                 db = database.mountDb(config)
             except Exception, e:
-                if not confApp:
-                    confApp = dialogs.QtGui.QApplication(sys.argv)
-                    dialog = dialogs.forms()
-                    
                 if e[0] == 2002:
                     exception = "server"
                     dialog.setForMysqlServer(config)
@@ -131,7 +132,7 @@ def getDatabase():
                 turn = maxturn
                 
             dialog.show()
-            confApp.exec_()
+            app.exec_()
             
             if exception in ["config","create"]:
                 config.writeConfig()

@@ -4,8 +4,9 @@
 import os
 
 class Item(object):
-    def __init__(self, database, no=None, infos=None, address=None):
-        self.__db = database
+    def __init__(self, bilge, no=None, infos=None, address=None):
+        self.__bilge = bilge
+        self.__db = bilge.db
         self.no = no
         self.real_address = address
         self.relative_address = None
@@ -39,14 +40,12 @@ class Item(object):
         else:
             return False
             
-    def getRelativeAddress(self, database=None):
-        if not database:
-            database = self.__db
-        if self.upno and database:
+    def getRelativeAddress(self):
+        if self.upno and self.__db:
             upno = self.upno
             self.relative_address = ""
             while upno != 0:
-                results = database.get("items", [{"no":upno}])
+                results = self.__db.get("items", [{"no":upno}])
                 if len(results) == 1:
                     infos = results[0]
                     upno = infos["upno"]
@@ -56,80 +55,87 @@ class Item(object):
         else:
             return False
     
-    def getDbInfo(self, no=None, database=None):
+    def getDbInfo(self, no=None):
         if no:
             self.no = no
-        if not database:
-            database = self.__db
-        
-        if self.no and database:
-            type(database)
-            results = database.get("items", [{"no":self.no}])
+        if self.no and self.__db:
+            results = self.__db.get("items", [{"no":self.no}])
             if len(results) == 1:
                 infos = results[0]
                 for i in infos.keys():
                     setattr(self, i, infos[i])
             
-                self.getRelativeAddress(database)
+                self.getRelativeAddress()
             else: #There is no possibility :D
                 return False
         else:
             return False
             
-    def insert2Db(self, database=None):
-        if not database:
-            database = self.__db
+    def insert2Db(self):
         if self.upno != None and self.name != None and self.form != None:
             row = { "upno":self.upno, "name":self.name,
                     "size":self.size, "form":self.form  }
-            database.insert("items", row)
+            self.__db.insert("items", row)
             
-            results = database.get("items", order=["no"])
+            results = self.__db.get("items", order=["no"])
             self.getDbInfo(results[-1]["no"])
             
             return True
         else:
             return False
+    
+    def insert2DbRecursive(self, progressItem):
+        self.getRealInfo()
+        if self.insert2Db():
+            try:
+                progressItem.increase()
+            except AttributeError:
+                pass
             
-    def delete(self, database=None):
-        if not database:
-            database = self.__db
+            if self.real_address and self.form == "directory":
+                for i in os.listdir(self.real_address):
+                    address = self.real_address + os.sep + i
+                    newItem = Item(self.__bilge, address = address)
+                    newItem.upno = self.no
+                    
+                    newItem.insert2DbRecursive(progressItem)
+            return True
+        else:
+            return False
+            
+    def delete(self):
         if self.no:
-            database.delete("items", {"no":self.no})
+            self.__db.delete("items", {"no":self.no})
             
             if self.form == "directory":
-                childs = database.get("items", {"upno":self.no})
+                childs = self.__db.get("items", {"upno":self.no})
                 for i in childs:
-                    newItem = Item(database, infos=i)
+                    newItem = Item(self.__bilge, infos=i)
                     newItem.delete()
                     
             return True
         else:
             return False
             
-    def copyInDb(self, upno, database=None):
-        if not database:
-            database = self.__db
+    def copyInDb(self, upno):
         if upno:
             oldNo = self.no
             self.upno = upno
             self.insert2Db()
             
             if self.form == "directory":
-                childs = database.get("items", {"upno":oldNo})
+                childs = self.__db.get("items", {"upno":oldNo})
                 for i in childs:
-                    newItem = Item(database, infos=i)
+                    newItem = Item(self.__bilge, infos=i)
                     newItem.copyInDb(self.no)
                     
             return True
         else:
             return False
             
-    def update(self, newInfo, database=None):
-        if not database:
-            database = self.__db
+    def update(self, newInfo):
         if self.no:
-            database.update("items",newInfo,{"no":self.no})
+            self.__db.update("items",newInfo,{"no":self.no})
             
             return True
         else:
@@ -191,6 +197,7 @@ class ExploreObject(object):
 
 class Explorer(object):
     def __init__(self, bilge):
+        self.__bilge = bilge
         self.__db = bilge.db
         self.expObjList = []
         self.expObj = self.newExp("main")
@@ -240,8 +247,8 @@ class Explorer(object):
             
         results = self.__db.get("items", {"upno":curItem.no}, ["form","name"])
         for i in results:
-            newItem = Item(self.__db, infos=i)
-            newItem.getRelativeAddress(self.__db)
+            newItem = Item(self.__bilge, infos=i)
+            newItem.getRelativeAddress()
             
             itemList.append(newItem)
         
@@ -252,8 +259,8 @@ class Explorer(object):
         if self.expObj.form == "search":
             results = self.__db.get("items", {"name":["like",text]}, ["form","name"])
             for i in results:
-                newItem = Item(self.__db, infos=i)
-                newItem.getRelativeAddress(self.__db)
+                newItem = Item(self.__bilge, infos=i)
+                newItem.getRelativeAddress()
                 
                 itemList.append(newItem)
             
@@ -276,26 +283,8 @@ class Explorer(object):
     def up(self):
         curItem = self.expObj.curItem()
         if curItem and curItem.upno != 0:
-            newItem = Item(self.__db, no=curItem.upno)
+            newItem = Item(self.__bilge, no=curItem.upno)
             newItem.getDbInfo()
             
             self.changeItem(newItem)
 
-def insertAll2Db(item, database, progressItem):
-    item.getRealInfo()
-    if item.insert2Db():
-        try:
-            progressItem.increase()
-        except AttributeError:
-            pass
-        
-        if item.real_address and item.form == "directory":
-            for i in os.listdir(item.real_address):
-                address = item.real_address + os.sep + i
-                newItem = Item(database, address = address)
-                newItem.upno = item.no
-                
-                insertAll2Db(newItem, database, progressItem)
-        return True
-    else:
-        return False

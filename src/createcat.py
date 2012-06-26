@@ -16,7 +16,7 @@ class CreateCat(QtGui.QDialog, Ui_CreateCatForm):
         QtGui.QDialog.__init__(self)
         self.setupUi(self)
         
-        self.bilge = bilge
+        self.__bilge = bilge
         
         self.connect(self.CatNextButton, QtCore.SIGNAL("clicked()"), self.next)
         self.connect(self.CatDirButton, QtCore.SIGNAL("clicked()"), self.chooseDir)
@@ -44,9 +44,9 @@ class CreateCat(QtGui.QDialog, Ui_CreateCatForm):
             
             self.setCursor(QtCore.Qt.WaitCursor)
             
-            item = self.bilge.cat.Item(self.bilge.db, address=directory)
+            item = self.__bilge.cat.Item(self.__bilge, address=directory)
             item.upno = 0
-            self.bilge.cat.insertAll2Db(item, self.bilge.db, self.progressItem)
+            item.insert2DbRecursive(self.progressItem)
             
             self.setCursor(QtCore.Qt.ArrowCursor)
 

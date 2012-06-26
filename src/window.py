@@ -17,7 +17,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         QtGui.QMainWindow.__init__(self)
         self.setupUi(self)
         
-        self.bilge = bilge
+        self.__bilge = bilge
         self.exp = bilge.exp
         
         self.setToolBars()
@@ -208,7 +208,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.refresh()
         
     def createCat(self):
-        createDialog = createcat.CreateCat(self.bilge)
+        createDialog = createcat.CreateCat(self.__bilge)
         createDialog.exec_()
         self.setCatList()
         self.refresh()
