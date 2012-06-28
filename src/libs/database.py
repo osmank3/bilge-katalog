@@ -5,8 +5,9 @@ import os
 import sys
 import gettext
 
-#For using unicode utf-8
-reload(sys).setdefaultencoding("utf-8")
+#For using unicode utf-8 on python2
+if sys.version_info.major < 3:
+    reload(sys).setdefaultencoding("utf-8")
 
 #For multilanguage support
 gettext.install("bilge-katalog", unicode=1)
@@ -75,21 +76,67 @@ class ConfigForDb(object):
         
         confFile.close()
 
-def mountDb(config):
+def mountDb(dbconfig):
     """Connecting to database"""
-    if config.dbType == "mysql" and MYSQL:
-        try:
-            DB = mysql.database()
-            DB.mount(config)
-        except Exception, e:
-            raise Exception(e[0], e[1])
-    elif config.dbType == "sqlite" and SQLITE:
-        try:
-            DB = sqlite.database()
-            DB.mount(config)
-        except Exception, e:
-            raise Exception(-1, e)
+    if dbconfig.dbType == "mysql":
+        if MYSQL:
+            try:
+                DB = mysql.database()
+                DB.mount(dbconfig)
+            except Exception, e:
+                raise Exception(e[0], e[1])
+        else:
+            raise Exception(-1, "Mysql module could not import!")
+    elif config.dbType == "sqlite":
+        if SQLITE:
+            try:
+                DB = sqlite.database()
+                DB.mount(dbconfig)
+            except Exception, e:
+                raise Exception(-1, e)
+        else:
+            raise Exception(-1, "Sqlite module could not import!")
     else:
         raise Exception(-1, "Wrong configured configuration file!")
     
     return DB
+
+class ConfigOnDb(object):
+    def __init__(self, bilge):
+        self.__bilge = bilge
+        self.__db = bilge.db
+        self.lastconf = {}
+        self.conf = {}
+        self.readConfOnDb()
+        
+    def ready(self):
+        return True
+        
+    def readConfOnDb(self):
+        results = self.__db.get("config")
+        self.lastconf = {}
+        for i in results:
+            self.lastconf[i["key"]] = i["value"]
+        self.conf = self.lastconf.copy()
+        
+    def writeConfToDb(self):
+        for i in self.conf.keys():
+            if i not in self.lastconf.keys():
+                self.__db.insert("config", {"key":i,"value":self.conf[i]})
+            elif self.conf[i] != self.lastconf[i]:
+                self.__db.update("config", {"value":self.conf[i]}, {"key":i})
+                
+        for i in self.lastconf.keys():
+            if i not in self.conf.keys():
+                self.__db.delete("config", {"key":i})
+        
+        self.readConfOnDb()
+        
+    def getConf(self, key):
+        if key in self.conf.keys():
+            return self.conf[key]
+        else:
+            return None
+        
+    def setConf(self, key, value):
+        self.conf[key] = value

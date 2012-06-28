@@ -4,8 +4,9 @@
 import os
 import sys
 
-#For using unicode utf-8
-reload(sys).setdefaultencoding("utf-8")
+#For using unicode utf-8 on python2
+if sys.version_info.major < 3:
+    reload(sys).setdefaultencoding("utf-8")
 
 from PyQt4 import QtCore
 from PyQt4 import QtGui

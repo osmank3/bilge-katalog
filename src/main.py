@@ -4,8 +4,9 @@
 import os
 import sys
 
-#For using unicode utf-8
-reload(sys).setdefaultencoding("utf-8")
+#For using unicode utf-8 on python2
+if sys.version_info.major < 3:
+    reload(sys).setdefaultencoding("utf-8")
 
 import libs.database as database
 import libs.catalog as catalog
@@ -20,6 +21,7 @@ class BilgeItem(object):
 class Bilge(object):
     def __init__(self, database=None):
         self.db = BilgeItem()
+        self.conf = BilgeItem()
         self.cat = BilgeItem()
         self.exp = BilgeItem()
         self.disp = BilgeItem()
@@ -31,6 +33,16 @@ class Bilge(object):
             self.db = database
         else:
             self.db = BilgeItem()
+            self.conf = BilgeItem()
+            self.cat = BilgeItem()
+            self.exp = BilgeItem()
+            self.disp = BilgeItem()
+    
+    def setConfig(self, config):
+        if config and config.ready():
+            self.conf = config
+        else:
+            self.conf = BilgeItem()
             self.cat = BilgeItem()
             self.exp = BilgeItem()
             self.disp = BilgeItem()
@@ -63,16 +75,33 @@ def startApp():
     db = getDatabase(app)
     bilge = Bilge(database=db)
     
-    if bilge.db.ready():
+    if not bilge.db.ready():
+        print("Database error")
+        return 2
+    else:
+        #reading configuration
+        conf = database.ConfigOnDb(bilge)
+        bilge.setConfig(conf)
+        
         #catalog functions
         cat = catalog
         bilge.setCatalog(cat)
-        if bilge.cat.ready():
+        
+        if not bilge.cat.ready():
+            print("Catalog module error")
+            return 2
+        elif not bilge.conf.ready():
+            print("Configuration error")
+            return 2
+        else:
             #exploring database
             exp = bilge.cat.Explorer(bilge)
             bilge.setExplorer(exp)
             
-            if bilge.exp.ready() and bilge.cat.ready():
+            if not bilge.exp.ready():
+                print("Explorer error")
+                return 2
+            else:
                 #creating gui
                 win = window.MainWindow(bilge)
                 bilge.setDisplay(win)
@@ -86,15 +115,6 @@ def startApp():
                 
                 win.show()
                 app.exec_()#sys.exit(app.exec_())
-            else:
-                print("Explorer error")
-                return 2
-        else:
-            print("Catalog module error")
-            return 2
-    else:
-        print("Database error")
-        return 2
     
 def getDatabase(app=None):
     if not app:
