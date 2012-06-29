@@ -23,7 +23,7 @@ class database(SampleDB):
                                         use_unicode = True    )
             self.cur = self.db.cursor()
             self.mounted = True
-        except MySQLdb.Error, e:
+        except MySQLdb.Error as e:
             raise Exception(e[0], e[1])
             
     def createUser(self, config):

@@ -80,15 +80,15 @@ class forms(QtGui.QDialog, Ui_Dialog):
             db = self.database.mountDb(config)
             try:
                 trydb = self.database.mountDb(self.confObj)
-            except Exception, e:
+            except Exception as e:
                 if e[0] == 1045:
                     db.createUser(self.confObj)    
             db.createDatabase(self.confObj)
             db.prepareTable()
             
             self.close()
-        except Exception, e:
-            print e
+        except Exception as e:
+            print(e)
         
     def cp_back(self):
         self.stackedWidget.setCurrentWidget(self.mysqlCreatePage)

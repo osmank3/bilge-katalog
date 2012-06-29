@@ -135,7 +135,7 @@ def getDatabase(app=None):
         else:
             try:
                 db = database.mountDb(config)
-            except Exception, e:
+            except Exception as e:
                 if e[0] == 2002:
                     exception = "server"
                     dialog.setForMysqlServer(config)

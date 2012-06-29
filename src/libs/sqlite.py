@@ -8,6 +8,7 @@ from sampledb import SampleDB
 class database(SampleDB):
     def __init__(self):
         SampleDB.__init__(self)
+        self.escText = "'"
         
     def mount(self, config):
         """function for connecting database with configuration"""
@@ -37,7 +38,7 @@ class database(SampleDB):
                                 )
                 self.db.commit()
                 
-        except Exception, e:
+        except Exception as e:
             raise Exception(e)
     
     def getkeys(self, table):

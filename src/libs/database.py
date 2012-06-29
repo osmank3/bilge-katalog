@@ -10,7 +10,10 @@ if sys.version_info.major < 3:
     reload(sys).setdefaultencoding("utf-8")
 
 #For multilanguage support
-gettext.install("bilge-katalog", unicode=1)
+if sys.version_info.major < 3:
+    gettext.install("bilge-katalog", unicode=1)
+else:
+    gettext.install("bilge-katalog", codeset="utf-8")
 
 #mysql support
 try:
@@ -83,16 +86,16 @@ def mountDb(dbconfig):
             try:
                 DB = mysql.database()
                 DB.mount(dbconfig)
-            except Exception, e:
+            except Exception as e:
                 raise Exception(e[0], e[1])
         else:
             raise Exception(-1, "Mysql module could not import!")
-    elif config.dbType == "sqlite":
+    elif dbconfig.dbType == "sqlite":
         if SQLITE:
             try:
                 DB = sqlite.database()
                 DB.mount(dbconfig)
-            except Exception, e:
+            except Exception as e:
                 raise Exception(-1, e)
         else:
             raise Exception(-1, "Sqlite module could not import!")
