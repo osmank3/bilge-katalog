@@ -56,17 +56,11 @@ class SampleDB(object):
                             query += "AND "
                         if type(i[j]) == list:
                             if i[j][0].lower() == "like":
-                                if type(i[j][1]) == str:
-                                    i[j][1] = i[j][1].replace("'","%s'"% (self.escText))
-                                query += "{0} LIKE '%{1}%' ".format(j, i[j][1])
+                                query += "{0} LIKE '%{1}%' ".format(j, self.__setEsc(i[j][1]))
                             else:
-                                if type(i[j][1]) == str:
-                                    i[j][1] = i[j][1].replace("'","%s'"% (self.escText))
-                                query += "%s %s '%s' "% (j, i[j][0], i[j][1])
-                        elif type(i[j]) in [str,int,long]:
-                            if type(i[j]) == str:
-                                i[j] = i[j].replace("'","%s'"% (self.escText))
-                            query += "%s = '%s' "% (j, i[j])
+                                query += "%s %s '%s' "% (j, i[j][0], self.__setEsc(i[j][1]))
+                        elif type(i[j]) not in [list, dict]:
+                            query += "%s = '%s' "% (j, self.__setEsc(i[j]))
                         n += 1
                     query += " ) "
                 elif type(i) == str:
@@ -114,7 +108,7 @@ class SampleDB(object):
         values = []
         for i in row.keys():
             keys.append(str(i))
-            values.append(str(row[i]).replace("'","%s'"% (self.escText)))
+            values.append(self.__setEsc(str(row[i])))
         
         query += "(%s) "% (", ".join(keys))
         query += "VALUES ('%s')"% ("', '".join(values))
@@ -136,9 +130,7 @@ class SampleDB(object):
         query = "UPDATE %s SET "% table
         setlist = []
         for i in row.keys():
-            if type(row[i]) == str:
-                row[i] = row[i].replace("'","%s'"% (self.escText))
-            setlist.append("%s = '%s'"% (i, row[i]))
+            setlist.append("%s = '%s'"% (i, self.__setEsc(row[i])))
         query += ", ".join(setlist) + " WHERE "
         if type(where) == dict:
             where = [where]
@@ -151,17 +143,11 @@ class SampleDB(object):
                         query += "AND "
                     if type(i[j]) == list:
                         if i[j][0].lower() == "like":
-                            if type(i[j][1]) == str:
-                                i[j][1] = i[j][1].replace("'","%s'"% (self.escText))
-                            query += "{0} LIKE '%{1}%' ".format(j, i[j][1])
+                            query += "{0} LIKE '%{1}%' ".format(j, self.__setEsc(i[j][1]))
                         else:
-                            if type(i[j][1]) == str:
-                                i[j][1] = i[j][1].replace("'","%s'"% (self.escText))
-                            query += "%s %s '%s' "% (j, i[j][0], i[j][1])
-                    elif type(i[j]) in [str,int,long]:
-                        if type(i[j]) == str:
-                            i[j] = i[j].replace("'","%s'"% (self.escText))
-                        query += "%s = '%s' "% (j, i[j])
+                            query += "%s %s '%s' "% (j, i[j][0], self.__setEsc(i[j][1]))
+                    elif type(i[j]) not in [list,dict]:
+                        query += "%s = '%s' "% (j, self.__setEsc(i[j]))
                     n += 1
                 query += " ) "
             elif type(i) == str:
@@ -192,17 +178,11 @@ class SampleDB(object):
                         query += "AND "
                     if type(i[j]) == list:
                         if i[j][0].lower() == "like":
-                            if type(i[j][1]) == str:
-                                i[j][1] = i[j][1].replace("'","%s'"% (self.escText))
-                            query += "{0} LIKE '%{1}%' ".format(j, i[j][1])
+                            query += "{0} LIKE '%{1}%' ".format(j, self.__setEsc(i[j][1]))
                         else:
-                            if type(i[j][1]) == str:
-                                i[j][1] = i[j][1].replace("'","%s'"% (self.escText))
-                            query += "%s %s '%s' "% (j, i[j][0], i[j][1])
-                    elif type(i[j]) in [str,int,long]:
-                        if type(i[j]) == str:
-                            i[j] = i[j].replace("'","%s'"% (self.escText))
-                        query += "%s = '%s' "% (j, i[j])
+                            query += "%s %s '%s' "% (j, i[j][0], self.__setEsc(i[j][1]))
+                    elif type(i[j]) not in [list,dict]:
+                        query += "%s = '%s' "% (j, self.__setEsc(i[j]))
                     n += 1
                 query += " ) "
             elif type(i) == str:
@@ -220,3 +200,8 @@ class SampleDB(object):
                         "primary":False,"default":"DEFAULT"     }, ...}
         """    
         pass
+    
+    def __setEsc(self, text):
+        if type(text) == str:
+            text = text.replace("'","%s'"% (self.escText))
+        return text

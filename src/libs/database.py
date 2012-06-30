@@ -17,14 +17,14 @@ else:
 
 #mysql support
 try:
-    import mysql
+    from . import mysql
     MYSQL = True
 except ImportError:
     MYSQL = False
 
 #sqlite support
 try:
-    import sqlite
+    from . import sqlite
     SQLITE = True
 except ImportError:
     SQLITE = False

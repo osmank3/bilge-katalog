@@ -136,10 +136,10 @@ def getDatabase(app=None):
             try:
                 db = database.mountDb(config)
             except Exception as e:
-                if e[0] == 2002:
+                if e.args[0] == 2002:
                     exception = "server"
                     dialog.setForMysqlServer(config)
-                elif e[0] in [1044,1045,1049]:
+                elif e.args[0] in [1044,1045,1049]:
                     exception = "create"
                     dialog.setForMysqlCreate(config, database)
                 else:

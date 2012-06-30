@@ -2,7 +2,7 @@
 #-*- coding:utf-8 -*-
 
 import MySQLdb
-from sampledb import SampleDB
+from .sampledb import SampleDB
 
 class database(SampleDB):
     def __init__(self):

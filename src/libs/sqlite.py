@@ -3,7 +3,7 @@
 
 import os
 import sqlite3
-from sampledb import SampleDB
+from .sampledb import SampleDB
 
 class database(SampleDB):
     def __init__(self):
@@ -72,13 +72,13 @@ class database(SampleDB):
             keytype = info["type"]
             query += "%s %s "% (i, keytype)
             
-            if info.has_key("primary") and info["primary"] == True:
+            if "primary" in info.keys() and info["primary"] == True:
                 query += "PRIMARY KEY "
             
-            if info.has_key("auto") and info["auto"] == True:
+            if "auto" in info.keys() and info["auto"] == True:
                 query += "AUTOINCREMENT "
                 
-            if info.has_key("default"):
+            if "default" in info.keys():
                 query += "DEFAULT %s "% info["default"]
             
             query += ", "
