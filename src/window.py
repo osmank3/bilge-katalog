@@ -12,6 +12,7 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 from ui_window import Ui_MainWindow
 import createcat
+import settings
 
 class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def __init__(self, bilge):
@@ -72,7 +73,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         
         #self.actInfo.triggered.connect(self.infoAction)
         
-        #self.actSet.triggered.connect(self.settings)
+        self.actSet.triggered.connect(self.settings)
         
         self.connect(self.CatList, QtCore.SIGNAL("itemDoubleClicked(QListWidgetItem *)"), self.doubleClickAction)
         self.connect(self.ExpList, QtCore.SIGNAL("itemDoubleClicked(QListWidgetItem *)"), self.doubleClickAction)
@@ -213,6 +214,10 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         createDialog.exec_()
         self.setCatList()
         self.refresh()
+        
+    def settings(self):
+        settingsDialog = settings.SettingsForm(self.__bilge)
+        settingsDialog.exec_()
 
 
 #testing lines start in here

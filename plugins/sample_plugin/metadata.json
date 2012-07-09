@@ -1,0 +1,10 @@
+{
+    "name": "SamplePlugin",
+    "description": "Description of sample plugin",
+    "developer": "Developer Name",
+    "main_module": "Main.py",
+    "dependencies": ["python_module"],
+    "extensions": ["mp3", "pdf"],
+    "version": 0.1,
+    "url": "www.sampleplugin.com"
+}

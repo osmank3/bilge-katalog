@@ -12,7 +12,7 @@ import libs.database as database
 import libs.catalog as catalog
 import window
 import dialogs
-import api
+import plugins
 
 class BilgeItem(object):
     def ready():
@@ -20,32 +20,25 @@ class BilgeItem(object):
 
 class Bilge(object):
     def __init__(self, database=None):
-        self.db = BilgeItem()
-        self.conf = BilgeItem()
-        self.cat = BilgeItem()
-        self.exp = BilgeItem()
-        self.disp = BilgeItem()
         if database and database.ready():
-            self.db = database
+            self.setDatabase(database)
+        else:
+            self.setDatabase(BilgeItem())
     
     def setDatabase(self, database):
         if database and database.ready():
             self.db = database
         else:
             self.db = BilgeItem()
-            self.conf = BilgeItem()
-            self.cat = BilgeItem()
-            self.exp = BilgeItem()
-            self.disp = BilgeItem()
+            self.setConfig(BilgeItem())
+            self.setCatalog(None)
     
     def setConfig(self, config):
         if config and config.ready():
             self.conf = config
         else:
             self.conf = BilgeItem()
-            self.cat = BilgeItem()
-            self.exp = BilgeItem()
-            self.disp = BilgeItem()
+            self.setPlugs(BilgeItem)
             
     def setCatalog(self, catalog):
         if catalog:
@@ -53,21 +46,27 @@ class Bilge(object):
             self.cat.ready = lambda: True
         else:
             self.cat = BilgeItem()
-            self.exp = BilgeItem()
-            self.disp = BilgeItem()
+            self.setExplorer(BilgeItem())
     
     def setExplorer(self, explorer):
         if explorer and explorer.ready():
             self.exp = explorer
         else:
             self.exp = BilgeItem()
-            self.disp = BilgeItem()
+            self.setDisplay(BilgeItem())
     
     def setDisplay(self, display):
         if display and display.ready():
             self.disp = display
         else:
             self.disp = BilgeItem()
+            self.setPlugs(BilgeItem)
+            
+    def setPlugs(self, plugs):
+        if plugs.ready():
+            self.plugs = plugs
+        else:
+            self.plugs = BilgeItem()
 
 def startApp():
     app = window.QtGui.QApplication(sys.argv)
@@ -103,18 +102,19 @@ def startApp():
                 return 2
             else:
                 #creating gui
-                win = window.MainWindow(bilge)
-                bilge.setDisplay(win)
+                disp = window.MainWindow(bilge)
+                bilge.setDisplay(disp)
                 
-                #create api
-                db_api = api.db_api(bilge)
-                disp_api = api.disp_api(bilge)
-                plug_api = api.plug_api(db_api, disp_api)
-                
-                getPlugins(plug_api)
-                
-                win.show()
-                app.exec_()#sys.exit(app.exec_())
+                if not bilge.disp.ready():
+                    print("Display error")
+                    return 2
+                else:
+                    #starting plugins
+                    plugs = plugins.Plugs(bilge)
+                    bilge.setPlugs(plugs)
+                    
+                    bilge.disp.show()
+                    app.exec_()#sys.exit(app.exec_())
     
 def getDatabase(app=None):
     if not app:
@@ -162,9 +162,6 @@ def getDatabase(app=None):
             
         if turn == maxturn:
             sys.exit()
-
-def getPlugins(api):
-    pass
 
 if __name__ == "__main__":
     startApp()

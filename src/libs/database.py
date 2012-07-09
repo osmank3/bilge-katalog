@@ -143,3 +143,4 @@ class ConfigOnDb(object):
         
     def setConf(self, key, value):
         self.conf[key] = value
+        self.writeConfToDb()

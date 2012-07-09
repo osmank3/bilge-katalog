@@ -200,6 +200,17 @@ class SampleDB(object):
                         "primary":False,"default":"DEFAULT"     }, ...}
         """    
         pass
+        
+    def deleteTable(self, table):
+        """
+        function for deleting table on database
+        
+        table : ""
+        """
+        if "," not in table:
+            query = "DROP TABLE IF EXISTS %s"% table
+            self.cur.execute(query)
+            self.db.commit()
     
     def __setEsc(self, text):
         if type(text) == str:
