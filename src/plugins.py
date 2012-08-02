@@ -138,6 +138,7 @@ class Plugs(object):
             self.plugins.append(pluginfo)
         
     def plugInstall(self, address):
+        upgradeFrom = None
         if os.getuid() == 0:
             pluginsDir = os.getcwd() + os.sep + "plugins"
         else:
@@ -172,8 +173,11 @@ class Plugs(object):
                 plug_module = "Main"
                 
             if os.path.exists(pluginsDir + os.sep + pluginfo["name"]) or os.path.exists(pluginsDir + os.sep + pluginName):
-                #sürüm kontrol nanesi eklenecek...
-                raise Exception(-1, "This plugin already installed")
+                for plug in self.plugins:
+                    if pluginfo["name"] == plug["name"]:
+                        if int(pluginfo["version"]) > int(plug["version"]):
+                            self.plugUninstall(plug, upgrade=True)
+                            upgradeFrom = plug["verison"]
                 
             try:
                 plugtar.extractall(pluginsDir)
@@ -186,7 +190,7 @@ class Plugs(object):
                     plug = __import__("{0}.{1}".format(pluginfo["name"], plug_module),
                                       fromlist = ["Main"])
                     pluginItem = plug.Main(self.api)
-                    pluginItem.install()
+                    pluginItem.install(upgradeFrom)
                 except ImportError:
                     raise Exception(-1, "Plugins main_module cound not import!")
                 
@@ -204,12 +208,13 @@ class Plugs(object):
                         shutil.rmtree(pluginsDir + os.sep + i)
                 raise e
         
-    def plugUninstall(self, plugin):
+    def plugUninstall(self, plugin, upgrade=False):
         n = 0
         while n < len(self.plugins):
             curPlug = self.plugins[n]
             if plugin["name"] == curPlug["name"]:
-                curPlug["module"].uninstall()
+                if not upgrade:
+                    curPlug["module"].uninstall()
                 if os.path.exists(curPlug["installed_dir"] + os.sep + curPlug["name"]):
                     shutil.rmtree(curPlug["installed_dir"] + os.sep + curPlug["name"])
                 self.plugins.pop(n)
@@ -219,22 +224,32 @@ class Plugs(object):
         self.__bilge.conf.setConf("plugins", newConf)
         
     def creatingCat(self, item):
-        address = item.realAddress
+        address = item.real_address
         if os.path.exists(address) and not os.path.isdir(address):
             name, ext = os.path.splitext(address)
             ext = ext.lower().replace(".","")
             for i in self.plugins:
                 if "extensions" in i.keys() and ext in i["extensions"] and i["activated"] == True:
-                    pass
+                    i["module"].run("getFileInfo", {"no":item.no,"address":item.real_address})
         
     def showInfo(self, item):
-        pass
-        
-    def searching(self, text):
         for i in self.plugins:
             if i["activated"] == True:
-                pass
-                
+                print(i["module"].run("showFileInfo",item.no))
+        
+    def searching(self, text):
+        founded = []
+        for i in self.plugins:
+            if i["activated"] == True:
+                for j in i["module"].run("search",text):
+                    if j not in founded:
+                        founded.append(j)
+        return founded
+    
+    def delete(self, no):
+        for i in self.plugins:
+            i["module"].run("delete", no)
+    
     def runPluginFunction(self, text):
         #text'i parçala ve ilgili fonsiyonu çalıştır.
         pass

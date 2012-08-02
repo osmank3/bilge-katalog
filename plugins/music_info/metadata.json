@@ -1,0 +1,10 @@
+{
+    "name": "MusicInfo",
+    "description": "Get music files infos.",
+    "developer": "Osman Karagöz",
+    "main_module": "Main.py",
+    "dependencies": ["hsaudiotag"],
+    "extensions": ["mp3", "wma", "mp4", "aiff", "ogg", "flac"],
+    "version": 0.1,
+    "url": "https://github.com/osmank3/bilge-katalog/tree/master/plugins/music_info"
+}

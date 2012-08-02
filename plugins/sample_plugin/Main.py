@@ -16,3 +16,12 @@ class Main(object):
         pass
     def uninstall(self):
         pass
+    def run(self, command, params):
+        """
+        commands            params                          return
+        "getFileInfo"       {"no":int,"address":str}        None
+        "search"            str --> search text             []
+        "showFileInfo"      int --> item no                 {}
+        "delete"            int --> item no                 None
+        """
+        pass

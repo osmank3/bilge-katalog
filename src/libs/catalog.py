@@ -92,6 +92,8 @@ class Item(object):
             except AttributeError:
                 pass
             
+            self.__bilge.plugs.creatingCat(self)
+            
             if self.real_address and self.form == "directory":
                 for i in os.listdir(self.real_address):
                     address = self.real_address + os.sep + i
@@ -106,6 +108,7 @@ class Item(object):
     def delete(self):
         if self.no:
             self.__db.delete("items", {"no":self.no})
+            self.__bilge.plugs.delete(self.no)
             
             if self.form == "directory":
                 childs = self.__db.get("items", {"upno":self.no})
@@ -257,10 +260,19 @@ class Explorer(object):
     def fillSearchList(self, text):
         itemList = []
         if self.expObj.form == "search":
+            noList = []
             results = self.__db.get("items", {"name":["like",text]}, ["form","name"])
             for i in results:
-                newItem = Item(self.__bilge, infos=i)
-                newItem.getRelativeAddress()
+                noList.append(i["no"])
+            
+            plugsearch = self.__bilge.plugs.searching(text)
+            for i in plugsearch:
+                if i not in noList:
+                    noList.append(i)
+            
+            for i in noList:
+                newItem = Item(self.__bilge, no=i)
+                newItem.getDbInfo()
                 
                 itemList.append(newItem)
             
