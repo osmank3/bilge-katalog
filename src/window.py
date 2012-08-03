@@ -3,6 +3,8 @@
 
 import os
 import sys
+import json
+import datetime
 
 #For using unicode utf-8 on python2
 if sys.version_info.major < 3:
@@ -44,6 +46,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.EditBar.addAction(self.actCopy)
         self.EditBar.addAction(self.actPaste)
         self.EditBar.addAction(self.actDel)
+        self.EditBar.addAction(self.actExport)
         
         self.searchLine = QtGui.QLineEdit()
         self.searchLine.setEnabled(False)
@@ -70,6 +73,9 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.actNewCat.triggered.connect(self.createCat)
         #self.actNewFile.triggered.connect(self.newFile)
         #self.actNewDir.triggered.connect(self.newDir)
+        
+        self.actExport.triggered.connect(self.exportCat)
+        self.actImport.triggered.connect(self.importCat)
         
         #self.actInfo.triggered.connect(self.infoAction)
         
@@ -130,6 +136,10 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             i.setSelected(False)
         if selectedItem:
             selectedItem.setSelected(True)
+            if selectedItem in self.CatList.selectedItems():
+                self.actExport.setEnabled(True)
+            else:
+                self.actExport.setEnabled(False)
     
     def delete(self):
         selecteds = []
@@ -218,7 +228,53 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def settings(self):
         settingsDialog = settings.SettingsForm(self.__bilge)
         settingsDialog.exec_()
-
+        
+    def exportCat(self):
+        selecteds = []
+        for i in self.CatList.selectedItems():
+            selecteds.append(i.item)
+        
+        exportCatList = []
+        for i in selecteds:
+            exportCatList.append(i.exportFromDb())
+        
+        if len(exportCatList) > 0:
+            exportDict = {
+                            "exportDate" : datetime.datetime.now(),
+                            "exporterName" : "Bilge-Katalog",
+                            "exporterVersion" : 0.1,
+                            "items" : exportCatList
+                         }
+            jsonFileName = QtGui.QFileDialog.getSaveFileName(
+                                                caption = "Save Export File",
+                                                filter = "Json File(*.json)")
+            jsonFile = open(jsonFileName, "w")
+            jsonFile.write(json.dumps(exportDict, indent=2, sort_keys=True, default=lambda obj: obj.isoformat() if isinstance(obj, datetime.datetime) else None))
+            jsonFile.close()
+            QtGui.QMessageBox.information(  self, "Exporting",
+                                            "Catalog(s) exported to:\n {0}.".format(jsonFileName), 0)
+    
+    def importCat(self):
+        jsonFileName = QtGui.QFileDialog.getOpenFileName(
+                                                caption = "Choose Import File",
+                                                filter = "Json File(*.json)")
+        if os.path.exists(jsonFileName):
+            jsonFile = open(jsonFileName, "r")
+            importDict = json.loads(jsonFile.read())
+            jsonFile.close()
+            
+            if importDict["exporterName"] == "Bilge-Katalog":
+                for i in importDict["items"]:
+                    newItem = self.__bilge.cat.Item(self.__bilge)
+                    newItem.import2Db(i)
+            
+            QtGui.QMessageBox.information(  self, "Importing",
+                                            "Importing is completed.", 0)
+            
+        self.setCatList()
+        self.refresh()
+            
+            
 
 #testing lines start in here
 if __name__ == "__main__":

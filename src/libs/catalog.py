@@ -2,6 +2,7 @@
 #-*- coding:utf-8 -*-
 
 import os
+import datetime
 
 class Item(object):
     def __init__(self, bilge, no=None, infos=None, address=None):
@@ -75,6 +76,8 @@ class Item(object):
         if self.upno != None and self.name != None and self.form != None:
             row = { "upno":self.upno, "name":self.name,
                     "size":self.size, "form":self.form  }
+            if self.dateadd != None:
+                row["dateadd"] = self.dateadd
             self.__db.insert("items", row)
             
             results = self.__db.get("items", order=["no"])
@@ -105,6 +108,42 @@ class Item(object):
         else:
             return False
             
+    def import2Db(self, itemDict):
+        keys = ["upno","name","size","form","dateadd"]
+        for i in itemDict.keys():
+            if i in keys:
+                if i == "dateadd":
+                    setattr(self, i, datetime.datetime.strptime(itemDict[i], "%Y-%m-%dT%H:%M:%S"))
+                else:
+                    setattr(self, i, itemDict[i])
+        
+        if self.upno == None:
+            self.upno = 0
+        
+        if self.insert2Db():
+            if "extensions" in itemDict.keys():
+                pass#eklenti verileri ile ilgili kısım eklenecek
+            if self.form == "directory" and "content" in itemDict.keys():
+                upno = self.no
+                for i in itemDict["content"]:
+                    i["upno"] = upno
+                    self.import2Db(i)
+    
+    def exportFromDb(self):
+        keys = ["name","size","form","dateadd"]
+        self.getDbInfo()
+        itemDict = {}
+        for i in keys:
+            itemDict[i] = getattr(self,i)
+        #eklenti verilerini sorgulatma ve ekletme kısmı eklenecek
+        if self.form == "directory":
+            itemDict["content"] = []
+            results = self.__db.get("items", {"upno":self.no}, ["form"])
+            for i in results:
+                newItem = Item(self.__bilge, infos=i)
+                itemDict["content"].append(newItem.exportFromDb())
+        return itemDict
+    
     def delete(self):
         if self.no:
             self.__db.delete("items", {"no":self.no})

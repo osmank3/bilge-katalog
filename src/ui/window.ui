@@ -30,6 +30,9 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="selectionMode">
+        <enum>QAbstractItemView::ContiguousSelection</enum>
+       </property>
       </widget>
       <widget class="QListWidget" name="ExpList">
        <property name="sizePolicy">
@@ -39,7 +42,7 @@
         </sizepolicy>
        </property>
        <property name="selectionMode">
-        <enum>QAbstractItemView::ExtendedSelection</enum>
+        <enum>QAbstractItemView::MultiSelection</enum>
        </property>
       </widget>
      </widget>
@@ -52,7 +55,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>20</height>
+     <height>29</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -81,6 +84,8 @@
     <addaction name="actCopy"/>
     <addaction name="actPaste"/>
     <addaction name="separator"/>
+    <addaction name="actImport"/>
+    <addaction name="actExport"/>
     <addaction name="actInfo"/>
     <addaction name="separator"/>
     <addaction name="actSet"/>
@@ -256,6 +261,19 @@
   <action name="actRefresh">
    <property name="text">
     <string>Refresh</string>
+   </property>
+  </action>
+  <action name="actExport">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>E&amp;xport</string>
+   </property>
+  </action>
+  <action name="actImport">
+   <property name="text">
+    <string>I&amp;mport</string>
    </property>
   </action>
  </widget>

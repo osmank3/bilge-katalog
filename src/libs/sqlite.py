@@ -26,7 +26,7 @@ class database(SampleDB):
                                     "no":{"type":"INTEGER", "auto":True, "primary":True},
                                     "upno":{"type":"INTEGER"},
                                     "name":{"type":"TEXT"},
-                                    "dateadd":{"type":"TIMESTAMP",},
+                                    "dateadd":{"type":"TIMESTAMP","default":"CURRENT_TIMESTAMP"},
                                     "size":{"type":"INTEGER",},
                                     "form":{"type":"TEXT"}
                                     }
