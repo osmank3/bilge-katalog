@@ -108,7 +108,7 @@ class Item(object):
         else:
             return False
             
-    def import2Db(self, itemDict):
+    def import2Db(self, itemDict, progressItem):
         keys = ["upno","name","size","form","dateadd"]
         for i in itemDict.keys():
             if i in keys:
@@ -121,13 +121,19 @@ class Item(object):
             self.upno = 0
         
         if self.insert2Db():
+            try:
+                progressItem.increase()
+            except AttributeError:
+                pass
+            
             if "extensions" in itemDict.keys():
-                pass#eklenti verileri ile ilgili kısım eklenecek
+                for i in itemDict["extensions"].keys():
+                    self.__bilge.plugs.importInfo(i, self.no, itemDict["extensions"][i])
             if self.form == "directory" and "content" in itemDict.keys():
                 upno = self.no
                 for i in itemDict["content"]:
                     i["upno"] = upno
-                    self.import2Db(i)
+                    self.import2Db(i, progressItem)
     
     def exportFromDb(self):
         keys = ["name","size","form","dateadd"]
@@ -135,7 +141,9 @@ class Item(object):
         itemDict = {}
         for i in keys:
             itemDict[i] = getattr(self,i)
-        #eklenti verilerini sorgulatma ve ekletme kısmı eklenecek
+        extensions = self.__bilge.plugs.exportInfo(self.no)
+        if len(extensions.keys()) > 0:
+            itemDict["extensions"] = extensions
         if self.form == "directory":
             itemDict["content"] = []
             results = self.__db.get("items", {"upno":self.no}, ["form"])

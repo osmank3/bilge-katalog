@@ -250,6 +250,20 @@ class Plugs(object):
         for i in self.plugins:
             i["module"].run("delete", no)
     
+    def exportInfo(self, no):
+        extensions = {}
+        for i in self.plugins:
+            if i["activated"] == True:
+                infos = i["module"].run("export", no)
+                if infos != False:
+                    extensions[i["name"]] = infos
+        return extensions
+    
+    def importInfo(self, extName, no, data):
+        for i in self.plugins:
+            if i["name"] == extName and i["activated"] == True:
+                i["module"].run("import", {"no":no, "data":data})
+    
     def runPluginFunction(self, text):
         #text'i parçala ve ilgili fonsiyonu çalıştır.
         pass

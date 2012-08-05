@@ -39,6 +39,10 @@ class Main(object):
             return self.showInfo(params)
         elif command == "delete":
             self.delete(params)
+        elif command == "export":
+            return self.exportInfo(params)
+        elif command == "import":
+            self.importInfo(params["no"], params["data"])
     
     def getInfo(self, no, address):
         info = auto.File(address)
@@ -59,6 +63,8 @@ class Main(object):
         infos = self.api.db.get(self.name, self.tableName, where=where)
         if len(infos) == 1:
             return infos[0]
+        else:
+            return False
     
     def delete(self, no):
         where = [{"no":no}]
@@ -76,3 +82,13 @@ class Main(object):
             if i["no"] not in noList:
                 noList.append(i["no"])
         return noList
+    
+    def exportInfo(self, no):
+        infos = self.showInfo(no)
+        if infos and "no" in infos:
+            infos.pop("no")
+        return infos
+        
+    def importInfo(self, no, infos):
+        infos["no"] = no
+        self.api.db.insert(self.name, self.tableName, infos)

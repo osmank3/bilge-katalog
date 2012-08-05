@@ -10,11 +10,14 @@ if sys.version_info.major < 3:
 
 class Main(object):
     def __init__(self, api):
+        """Look at api referance from application webpage for using api"""
         self.api = api
         pass
-    def install(self):
+    def install(self, upgradeFrom=None):
+        """This function is lauched when extensions installing."""
         pass
     def uninstall(self):
+        """This function is lauched when extensions uninstalling."""
         pass
     def run(self, command, params):
         """
@@ -23,5 +26,7 @@ class Main(object):
         "search"            str --> search text             []
         "showFileInfo"      int --> item no                 {}
         "delete"            int --> item no                 None
+        "export"            int --> item no                 json supported python data types
+        "import"            {"no":int,"data":exported data} None
         """
         pass

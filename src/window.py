@@ -3,8 +3,6 @@
 
 import os
 import sys
-import json
-import datetime
 
 #For using unicode utf-8 on python2
 if sys.version_info.major < 3:
@@ -13,7 +11,7 @@ if sys.version_info.major < 3:
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 from ui_window import Ui_MainWindow
-import createcat
+import catdialogs
 import settings
 
 class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
@@ -53,7 +51,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.searchButton = QtGui.QPushButton()
         self.searchButton.setCheckable(True)
         self.searchButton.setObjectName("searchButton")
-        self.searchButton.setText(QtGui.QApplication.translate("MainWindow", "Search", None, QtGui.QApplication.UnicodeUTF8))
+        self.searchButton.setText(self.tr("Search"))
         self.SearchBar.addWidget(self.searchLine)
         self.SearchBar.addWidget(self.searchButton)
         
@@ -220,59 +218,27 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.refresh()
         
     def createCat(self):
-        createDialog = createcat.CreateCat(self.__bilge)
+        createDialog = catdialogs.CatDialog(self.__bilge, "create")
         createDialog.exec_()
+        self.setCatList()
+        self.refresh()
+        
+    def exportCat(self):
+        selecteds = []
+        for i in self.CatList.selectedItems():
+            selecteds.append(i.item)
+        exportDialog = catdialogs.CatDialog(self.__bilge, "export", selecteds)
+        exportDialog.exec_()
+    
+    def importCat(self):
+        importDialog = catdialogs.CatDialog(self.__bilge, "import")
+        importDialog.exec_()
         self.setCatList()
         self.refresh()
         
     def settings(self):
         settingsDialog = settings.SettingsForm(self.__bilge)
         settingsDialog.exec_()
-        
-    def exportCat(self):
-        selecteds = []
-        for i in self.CatList.selectedItems():
-            selecteds.append(i.item)
-        
-        exportCatList = []
-        for i in selecteds:
-            exportCatList.append(i.exportFromDb())
-        
-        if len(exportCatList) > 0:
-            exportDict = {
-                            "exportDate" : datetime.datetime.now(),
-                            "exporterName" : "Bilge-Katalog",
-                            "exporterVersion" : 0.1,
-                            "items" : exportCatList
-                         }
-            jsonFileName = QtGui.QFileDialog.getSaveFileName(
-                                                caption = "Save Export File",
-                                                filter = "Json File(*.json)")
-            jsonFile = open(jsonFileName, "w")
-            jsonFile.write(json.dumps(exportDict, indent=2, sort_keys=True, default=lambda obj: obj.isoformat() if isinstance(obj, datetime.datetime) else None))
-            jsonFile.close()
-            QtGui.QMessageBox.information(  self, "Exporting",
-                                            "Catalog(s) exported to:\n {0}.".format(jsonFileName), 0)
-    
-    def importCat(self):
-        jsonFileName = QtGui.QFileDialog.getOpenFileName(
-                                                caption = "Choose Import File",
-                                                filter = "Json File(*.json)")
-        if os.path.exists(jsonFileName):
-            jsonFile = open(jsonFileName, "r")
-            importDict = json.loads(jsonFile.read())
-            jsonFile.close()
-            
-            if importDict["exporterName"] == "Bilge-Katalog":
-                for i in importDict["items"]:
-                    newItem = self.__bilge.cat.Item(self.__bilge)
-                    newItem.import2Db(i)
-            
-            QtGui.QMessageBox.information(  self, "Importing",
-                                            "Importing is completed.", 0)
-            
-        self.setCatList()
-        self.refresh()
             
             
 

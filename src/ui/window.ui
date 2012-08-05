@@ -64,6 +64,9 @@
     </property>
     <addaction name="actNewCat"/>
     <addaction name="separator"/>
+    <addaction name="actImport"/>
+    <addaction name="actExport"/>
+    <addaction name="separator"/>
     <addaction name="actExit"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
@@ -84,8 +87,6 @@
     <addaction name="actCopy"/>
     <addaction name="actPaste"/>
     <addaction name="separator"/>
-    <addaction name="actImport"/>
-    <addaction name="actExport"/>
     <addaction name="actInfo"/>
     <addaction name="separator"/>
     <addaction name="actSet"/>
