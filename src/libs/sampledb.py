@@ -110,11 +110,10 @@ class SampleDB(object):
             keys.append(str(i))
             values.append(self.__setEsc(str(row[i])))
         
-        query += "(%s) "% (", ".join(keys))
+        query += "(`%s`) "% ("`, `".join(keys))
         query += "VALUES ('%s')"% ("', '".join(values))
         
         self.cur.execute(query)
-        self.db.commit()
     
     def update(self, table, row, where):
         """
@@ -130,7 +129,7 @@ class SampleDB(object):
         query = "UPDATE %s SET "% table
         setlist = []
         for i in row.keys():
-            setlist.append("%s = '%s'"% (i, self.__setEsc(row[i])))
+            setlist.append("`%s` = '%s'"% (i, self.__setEsc(row[i])))
         query += ", ".join(setlist) + " WHERE "
         if type(where) == dict:
             where = [where]
@@ -143,18 +142,17 @@ class SampleDB(object):
                         query += "AND "
                     if type(i[j]) == list:
                         if i[j][0].lower() == "like":
-                            query += "{0} LIKE '%{1}%' ".format(j, self.__setEsc(i[j][1]))
+                            query += "`{0}` LIKE '%{1}%' ".format(j, self.__setEsc(i[j][1]))
                         else:
-                            query += "%s %s '%s' "% (j, i[j][0], self.__setEsc(i[j][1]))
+                            query += "`%s` %s '%s' "% (j, i[j][0], self.__setEsc(i[j][1]))
                     elif type(i[j]) not in [list,dict]:
-                        query += "%s = '%s' "% (j, self.__setEsc(i[j]))
+                        query += "`%s` = '%s' "% (j, self.__setEsc(i[j]))
                     n += 1
                 query += " ) "
             elif type(i) == str:
                 query += "%s "% i
         
         self.cur.execute(query)
-        self.db.commit()
     
     def delete(self, table, where):
         """
@@ -189,7 +187,6 @@ class SampleDB(object):
                 query += "%s "% i
         
         self.cur.execute(query)
-        self.db.commit()
     
     def createTable(self, table, keys):
         """
@@ -211,6 +208,9 @@ class SampleDB(object):
             query = "DROP TABLE IF EXISTS %s"% table
             self.cur.execute(query)
             self.db.commit()
+    
+    def sync(self):
+        self.db.commit()
     
     def __setEsc(self, text):
         if type(text) == str:

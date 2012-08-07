@@ -30,10 +30,12 @@ class CatDialog(QtGui.QDialog, Ui_CatDialogs):
         self.params = params
         
         if self.method == "export":
+            self.setWindowTitle(self.tr("Export"))
             self.CatLabel.setText(self.tr("Choose a json file for saving"))
             self.CatNextButton.setText(self.tr("Export"))
             self.CatProgressLabel.setText(self.tr("Catalog exporting..."))
         elif self.method == "import":
+            self.setWindowTitle(self.tr("Import"))
             self.CatLabel.setText(self.tr("Choose a json file for importing"))
             self.CatNextButton.setText(self.tr("Import"))
             self.CatProgressLabel.setText(self.tr("Catalog importing..."))
@@ -99,6 +101,7 @@ class CatDialog(QtGui.QDialog, Ui_CatDialogs):
                             newItem = self.__bilge.cat.Item(self.__bilge)
                             newItem.import2Db(i, self.progressItem)
                 
+                self.__bilge.db.sync()
                 self.setCursor(QtCore.Qt.ArrowCursor)
             elif self.method == "export":
                 exportCatList = []

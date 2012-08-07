@@ -24,6 +24,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         
         self.setToolBars()
         self.setSignals()
+        self.setContextMenus()
         
         self.board = []
         self.boardDo = None # "copy" or "cut"
@@ -75,18 +76,47 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.actExport.triggered.connect(self.exportCat)
         self.actImport.triggered.connect(self.importCat)
         
+        self.actOpen.triggered.connect(self.doubleClickAction)
         #self.actInfo.triggered.connect(self.infoAction)
         
         self.actSet.triggered.connect(self.settings)
         
         self.connect(self.CatList, QtCore.SIGNAL("itemDoubleClicked(QListWidgetItem *)"), self.doubleClickAction)
         self.connect(self.ExpList, QtCore.SIGNAL("itemDoubleClicked(QListWidgetItem *)"), self.doubleClickAction)
-        self.connect(self.CatList, QtCore.SIGNAL("itemClicked(QListWidgetItem *)"), self.clickAction)
-        self.connect(self.ExpList, QtCore.SIGNAL("itemClicked(QListWidgetItem *)"), self.clickAction)
+        self.connect(self.CatList, QtCore.SIGNAL("itemSelectionChanged()"), self.catSelectionChanged)
+        self.connect(self.ExpList, QtCore.SIGNAL("itemSelectionChanged()"), self.expSelectionChanged)
+        self.connect(self.CatList, QtCore.SIGNAL("customContextMenuRequested(const QPoint &)"), self.catRightClick)
+        self.connect(self.ExpList, QtCore.SIGNAL("customContextMenuRequested(const QPoint &)"), self.expRightClick)
         
         self.connect(self.searchButton, QtCore.SIGNAL("toggled(bool)"), self.searching)
         self.connect(self.searchLine, QtCore.SIGNAL("textChanged(QString)"), self.search)
+    
+    def setContextMenus(self):
+        self.catContext = QtGui.QMenu(self.CatList)
+        self.catContext.addAction(self.actOpen)
+        self.catContext.addAction(self.actInfo)
+        self.catContext.addSeparator()
+        self.catContext.addAction(self.actNewCat)
+        self.catContext.addSeparator()
+        self.catContext.addAction(self.actExport)
+        self.catContext.addAction(self.actImport)
+        self.catContext.addSeparator()
+        self.catContext.addAction(self.actDel)
+        self.catContext.addAction(self.actCut)
+        self.catContext.addAction(self.actCopy)
+        self.catContext.addAction(self.actPaste)
         
+        self.expContext = QtGui.QMenu(self.ExpList)
+        self.expContext.addAction(self.actOpen)
+        self.expContext.addAction(self.actInfo)
+        self.expContext.addSeparator()
+        self.expContext.addMenu(self.menuNew)
+        self.expContext.addSeparator()
+        self.expContext.addAction(self.actDel)
+        self.expContext.addAction(self.actCut)
+        self.expContext.addAction(self.actCopy)
+        self.expContext.addAction(self.actPaste)
+    
     def setCatList(self, itemList=None):
         if itemList:
             catalogs = itemList
@@ -120,24 +150,86 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             QtItem = QtGui.QListWidgetItem(i.name)
             setattr(QtItem, "item", i)
             self.ExpList.addItem(QtItem)
-        self.clickAction()
     
     def doubleClickAction(self, selectedItem=None):
+        if type(selectedItem) == bool:
+            selecteds = []
+            for i in self.ExpList.selectedItems():
+                selecteds.append(i)
+            for i in self.CatList.selectedItems():
+                if len(selecteds) == 0:
+                    selecteds.append(i)
+            if len(selecteds) == 1:
+                selectedItem = selecteds[0]
         if selectedItem and selectedItem.item.form == "directory":
             self.exp.changeItem(selectedItem.item)
             self.refresh()
+                
+    def catRightClick(self, point):
+        self.CatList.setItemSelected(self.CatList.itemAt(point), True)
+        self.catSelectionChanged()
+        
+        self.actOpen.setEnabled(True)
+        self.catContext.setDefaultAction(self.actOpen)
+        
+        coordinate = self.CatList.mapToGlobal(point)
+        self.catContext.exec_(coordinate)
     
-    def clickAction(self, selectedItem=None):
+    def expRightClick(self, point):
+        self.ExpList.setItemSelected(self.ExpList.itemAt(point), True)
+        self.expSelectionChanged()
+        
+        if self.ExpList.itemAt(point).item.form == "directory":
+            self.expContext.setDefaultAction(self.actOpen)
+            self.actOpen.setEnabled(True)
+        else:# *** developing *** if form == "file" and file found on drive: default action is opening
+            self.actOpen.setEnabled(False)
+            self.expContext.setDefaultAction(self.actInfo)
+        
+        coordinate = self.ExpList.mapToGlobal(point)
+        self.expContext.exec_(coordinate)
+    
+    def catSelectionChanged(self):
         for i in self.ExpList.selectedItems():
             i.setSelected(False)
+        self.actExport.setEnabled(True)
+        
+        selecteds = []
+        for i in self.CatList.selectedItems():
+            selecteds.append(i.item)
+        self.setButtonsStatus(selecteds)
+    
+    def expSelectionChanged(self):
         for i in self.CatList.selectedItems():
             i.setSelected(False)
-        if selectedItem:
-            selectedItem.setSelected(True)
-            if selectedItem in self.CatList.selectedItems():
-                self.actExport.setEnabled(True)
+        self.actExport.setEnabled(False)
+        
+        selecteds = []
+        for i in self.ExpList.selectedItems():
+            selecteds.append(i.item)
+        self.setButtonsStatus(selecteds)
+        
+    def setButtonsStatus(self, selecteds):
+        if len(selecteds) == 0:
+            self.actDel.setEnabled(False)
+            self.actCut.setEnabled(False)
+            self.actCopy.setEnabled(False)
+            self.actExport.setEnabled(False)
+            self.actInfo.setEnabled(False)
+        else:
+            self.actDel.setEnabled(True)
+            self.actCut.setEnabled(True)
+            self.actCopy.setEnabled(True)
+            if len(selecteds) == 1:
+                self.actInfo.setEnabled(True)
             else:
-                self.actExport.setEnabled(False)
+                self.actInfo.setEnabled(False)
+        if not self.boardDo and not self.board:
+            self.actPaste.setEnabled(False)
+        elif len(selecteds) != 1:
+            self.actPaste.setEnabled(False)
+        else:
+            self.actPaste.setEnabled(True)
     
     def delete(self):
         selecteds = []
@@ -150,6 +242,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         for i in selecteds:
             i.delete()
         
+        self.setCatList()
         self.refresh()
         
     def copy(self):
@@ -176,8 +269,16 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     
     def paste(self):
         if self.boardDo and self.board:
-            upno = self.exp.expObj.curItem().no
-            #*** developing **** edit when context menu is ready for using
+            selecteds = []
+            for i in self.ExpList.selectedItems():
+                selecteds.append(i.item)
+            for i in self.CatList.selectedItems():
+                if len(selecteds) == 0:
+                    selecteds.append(i.item)
+            if len(selecteds) == 1 and selecteds[0].item.form == "directory":
+                upno = selecteds[0].no
+            else:
+                upno = self.exp.expObj.curItem().no
             for i in self.board:
                 if self.boardDo == "copy":
                     i.copyInDb(upno)

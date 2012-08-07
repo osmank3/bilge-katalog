@@ -115,6 +115,8 @@ def startApp():
                     
                     bilge.disp.show()
                     app.exec_()#sys.exit(app.exec_())
+                    
+                    bilge.db.sync()
     
 def getDatabase(app=None):
     if not app:

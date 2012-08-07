@@ -30,8 +30,11 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="contextMenuPolicy">
+        <enum>Qt::CustomContextMenu</enum>
+       </property>
        <property name="selectionMode">
-        <enum>QAbstractItemView::ContiguousSelection</enum>
+        <enum>QAbstractItemView::ExtendedSelection</enum>
        </property>
       </widget>
       <widget class="QListWidget" name="ExpList">
@@ -41,8 +44,11 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="contextMenuPolicy">
+        <enum>Qt::CustomContextMenu</enum>
+       </property>
        <property name="selectionMode">
-        <enum>QAbstractItemView::MultiSelection</enum>
+        <enum>QAbstractItemView::ExtendedSelection</enum>
        </property>
       </widget>
      </widget>
@@ -166,26 +172,41 @@
    </property>
   </action>
   <action name="actDel">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>&amp;Delete</string>
    </property>
   </action>
   <action name="actCut">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>&amp;Cut</string>
    </property>
   </action>
   <action name="actCopy">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Cop&amp;y</string>
    </property>
   </action>
   <action name="actPaste">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>&amp;Paste</string>
    </property>
   </action>
   <action name="actInfo">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>&amp;Info</string>
    </property>
@@ -277,6 +298,11 @@
     <string>I&amp;mport</string>
    </property>
   </action>
+  <action name="actOpen">
+   <property name="text">
+    <string>&amp;Open</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections>
@@ -291,8 +317,8 @@
      <y>-1</y>
     </hint>
     <hint type="destinationlabel">
-     <x>11</x>
-     <y>23</y>
+     <x>24</x>
+     <y>41</y>
     </hint>
    </hints>
   </connection>
@@ -308,7 +334,7 @@
     </hint>
     <hint type="destinationlabel">
      <x>3</x>
-     <y>23</y>
+     <y>41</y>
     </hint>
    </hints>
   </connection>
@@ -323,8 +349,8 @@
      <y>-1</y>
     </hint>
     <hint type="destinationlabel">
-     <x>407</x>
-     <y>23</y>
+     <x>433</x>
+     <y>41</y>
     </hint>
    </hints>
   </connection>
@@ -341,6 +367,38 @@
     <hint type="destinationlabel">
      <x>399</x>
      <y>590</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>CatList</sender>
+   <signal>clicked(QModelIndex)</signal>
+   <receiver>CatList</receiver>
+   <slot>setCurrentIndex(QModelIndex)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>146</x>
+     <y>176</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>232</x>
+     <y>261</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>ExpList</sender>
+   <signal>clicked(QModelIndex)</signal>
+   <receiver>ExpList</receiver>
+   <slot>setCurrentIndex(QModelIndex)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>497</x>
+     <y>212</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>535</x>
+     <y>237</y>
     </hint>
    </hints>
   </connection>
