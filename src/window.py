@@ -22,9 +22,13 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.__bilge = bilge
         self.exp = bilge.exp
         
-        self.setToolBars()
-        self.setSignals()
+        self.setTopCenter()
+        self.OptionsButton.setHidden(True)
+        self.DetailButton.setHidden(True)
+        
         self.setContextMenus()
+        self.setOptionsMenu()
+        self.setSignals()
         
         self.board = []
         self.boardDo = None # "copy" or "cut"
@@ -33,30 +37,9 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         
     def ready(self):
         return True
-    
-    def setToolBars(self):
-        """Adding toolbars actions"""
-        self.ExpBar.addAction(self.actBack)
-        self.ExpBar.addAction(self.actForward)
-        self.ExpBar.addAction(self.actUp)
-        self.ExpBar.addAction(self.actRefresh)
-        
-        self.EditBar.addAction(self.actCut)
-        self.EditBar.addAction(self.actCopy)
-        self.EditBar.addAction(self.actPaste)
-        self.EditBar.addAction(self.actDel)
-        self.EditBar.addAction(self.actExport)
-        
-        self.searchLine = QtGui.QLineEdit()
-        self.searchLine.setEnabled(False)
-        self.searchButton = QtGui.QPushButton()
-        self.searchButton.setCheckable(True)
-        self.searchButton.setObjectName("searchButton")
-        self.searchButton.setText(self.tr("Search"))
-        self.SearchBar.addWidget(self.searchLine)
-        self.SearchBar.addWidget(self.searchButton)
         
     def setSignals(self):
+        self.actLocation.triggered.connect(self.location)
         self.actBack.triggered.connect(self.back)
         self.actForward.triggered.connect(self.forward)
         self.actUp.triggered.connect(self.up)
@@ -67,8 +50,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.actCut.triggered.connect(self.cut)
         self.actPaste.triggered.connect(self.paste)
         
-        self.actExit.triggered.connect(self.close)
-        
         self.actNewCat.triggered.connect(self.createCat)
         #self.actNewFile.triggered.connect(self.newFile)
         #self.actNewDir.triggered.connect(self.newDir)
@@ -78,18 +59,24 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         
         self.actOpen.triggered.connect(self.doubleClickAction)
         #self.actInfo.triggered.connect(self.infoAction)
+        self.actSearch.triggered.connect(self.searching)
         
         self.actSet.triggered.connect(self.settings)
         
         self.connect(self.CatList, QtCore.SIGNAL("itemDoubleClicked(QListWidgetItem *)"), self.doubleClickAction)
         self.connect(self.ExpList, QtCore.SIGNAL("itemDoubleClicked(QListWidgetItem *)"), self.doubleClickAction)
+        self.connect(self.CatList, QtCore.SIGNAL("itemActivated(QListWidgetItem *)"), self.doubleClickAction)
+        self.connect(self.ExpList, QtCore.SIGNAL("itemActivated(QListWidgetItem *)"), self.doubleClickAction)
         self.connect(self.CatList, QtCore.SIGNAL("itemSelectionChanged()"), self.catSelectionChanged)
         self.connect(self.ExpList, QtCore.SIGNAL("itemSelectionChanged()"), self.expSelectionChanged)
         self.connect(self.CatList, QtCore.SIGNAL("customContextMenuRequested(const QPoint &)"), self.catRightClick)
         self.connect(self.ExpList, QtCore.SIGNAL("customContextMenuRequested(const QPoint &)"), self.expRightClick)
         
-        self.connect(self.searchButton, QtCore.SIGNAL("toggled(bool)"), self.searching)
-        self.connect(self.searchLine, QtCore.SIGNAL("textChanged(QString)"), self.search)
+        self.connect(self.SearchLine, QtCore.SIGNAL("textChanged(QString)"), self.search)
+        self.connect(self.LocationLine, QtCore.SIGNAL("returnPressed()"), self.setLocation)
+        
+        self.connect(self.BackButton, QtCore.SIGNAL("clicked()"), self.back)
+        self.connect(self.ForwardButton, QtCore.SIGNAL("clicked()"), self.forward)
     
     def setContextMenus(self):
         self.catContext = QtGui.QMenu(self.CatList)
@@ -116,6 +103,15 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.expContext.addAction(self.actCut)
         self.expContext.addAction(self.actCopy)
         self.expContext.addAction(self.actPaste)
+        
+    def setOptionsMenu(self):
+        self.optionsMenu = QtGui.QMenu(self.OptionsButton)
+        self.optionsMenu.addMenu(self.menuFile)
+        self.optionsMenu.addMenu(self.menuEdit)
+        self.optionsMenu.addMenu(self.menuView)
+        self.optionsMenu.addMenu(self.menuGo)
+        self.optionsMenu.addMenu(self.menuHelp)
+        self.OptionsButton.setMenu(self.optionsMenu)
     
     def setCatList(self, itemList=None):
         if itemList:
@@ -130,6 +126,22 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             QtItem = QtGui.QListWidgetItem(i.name)
             setattr(QtItem, "item", i)
             self.CatList.addItem(QtItem)
+    
+    def setTopCenter(self, operation=None):
+        if operation == "search":
+            self.LocationLine.setHidden(True)
+            self.AddressLabel.setHidden(True)
+            self.SearchLine.setHidden(False)
+            self.SearchLine.setFocus()
+        elif operation == "location":
+            self.SearchLine.setHidden(True)
+            self.AddressLabel.setHidden(True)
+            self.LocationLine.setHidden(False)
+            self.LocationLine.setFocus()
+        else:
+            self.SearchLine.setHidden(True)
+            self.LocationLine.setHidden(True)
+            self.AddressLabel.setHidden(False)
 
     def back(self):
         self.exp.back()
@@ -145,31 +157,61 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     
     def refresh(self):
         self.ExpList.clear()
+        if self.exp.expObj.curItem():
+            self.AddressLabel.setText(self.exp.expObj.curItem().name)
+        else:
+            self.AddressLabel.clear()
         items = self.exp.listOfDir()
         for i in items:
             QtItem = QtGui.QListWidgetItem(i.name)
             setattr(QtItem, "item", i)
             self.ExpList.addItem(QtItem)
     
+    def location(self):
+        self.setTopCenter("location")
+    
+    def setLocation(self):
+        address = self.LocationLine.text()
+        self.LocationLine.clear()
+        dirNames = address.split(os.sep)
+        upno = 0
+        for i in dirNames:
+            if i == "":
+                continue
+            results = self.__bilge.db.get("items",{"upno":upno,"name":i})
+            if len(results) == 1:
+                upno = results[0]["no"]
+            else:
+                upno = None
+                break
+        
+        if upno:
+            item = self.__bilge.cat.Item(self.__bilge, no=upno)
+            item.getDbInfo()
+            self.exp.changeItem(item)
+        
+        self.refresh()
+        self.setTopCenter()
+    
     def doubleClickAction(self, selectedItem=None):
         if type(selectedItem) == bool:
             selecteds = []
             for i in self.ExpList.selectedItems():
                 selecteds.append(i)
-            for i in self.CatList.selectedItems():
-                if len(selecteds) == 0:
+            if len(selecteds) == 0:
+                for i in self.CatList.selectedItems():
                     selecteds.append(i)
             if len(selecteds) == 1:
                 selectedItem = selecteds[0]
         if selectedItem and selectedItem.item.form == "directory":
             self.exp.changeItem(selectedItem.item)
+            self.ExpList.setFocus()
             self.refresh()
                 
     def catRightClick(self, point):
         self.CatList.setItemSelected(self.CatList.itemAt(point), True)
         self.catSelectionChanged()
         
-        self.actOpen.setEnabled(True)
         self.catContext.setDefaultAction(self.actOpen)
         
         coordinate = self.CatList.mapToGlobal(point)
@@ -181,9 +223,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         
         if self.ExpList.itemAt(point).item.form == "directory":
             self.expContext.setDefaultAction(self.actOpen)
-            self.actOpen.setEnabled(True)
         else:# *** developing *** if form == "file" and file found on drive: default action is opening
-            self.actOpen.setEnabled(False)
             self.expContext.setDefaultAction(self.actInfo)
         
         coordinate = self.ExpList.mapToGlobal(point)
@@ -198,6 +238,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         for i in self.CatList.selectedItems():
             selecteds.append(i.item)
         self.setButtonsStatus(selecteds)
+        self.setInfoLabel(selecteds)
     
     def expSelectionChanged(self):
         for i in self.CatList.selectedItems():
@@ -208,6 +249,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         for i in self.ExpList.selectedItems():
             selecteds.append(i.item)
         self.setButtonsStatus(selecteds)
+        self.setInfoLabel(selecteds)
         
     def setButtonsStatus(self, selecteds):
         if len(selecteds) == 0:
@@ -222,14 +264,46 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.actCopy.setEnabled(True)
             if len(selecteds) == 1:
                 self.actInfo.setEnabled(True)
+                self.actOpen.setEnabled(True)
             else:
                 self.actInfo.setEnabled(False)
+                self.actOpen.setEnabled(False)
         if not self.boardDo and not self.board:
             self.actPaste.setEnabled(False)
         elif len(selecteds) != 1:
             self.actPaste.setEnabled(False)
         else:
             self.actPaste.setEnabled(True)
+    
+    def setInfoLabel(self, selecteds):
+        if len(selecteds) == 1:
+            self.DetailButton.setHidden(False)
+            item = selecteds[0]
+            textFormat = {
+                            "addressTitle" : self.tr("Address"),
+                            "address" : item.relative_address,
+                            "sizeTitle" : self.tr("Size"),
+                            "size" : item.size,
+                            "formTitle" : self.tr("Type"),
+                            "form" : item.form,
+                            "dateTitle" : self.tr("Adding Date"),
+                            "date" : item.dateadd.isoformat(" ")
+                         }
+            if item.upno == 0:
+                textFormat["address"] = "/"
+            self.InfoLabel.setText("""<html><head/><body>
+                    <div>
+                        <span><b>{formTitle}</b>: {form} </span>
+                        <span><b>{sizeTitle}</b>: {size} </span>
+                        <span><b>{dateTitle}</b>: {date} </span>
+                    </div>
+                    <div>
+                        <span><b>{addressTitle}</b>: {address}</span>
+                    </div>
+                    </body></html>""".format(**textFormat))
+        else:
+            self.InfoLabel.clear()
+            self.DetailButton.setHidden(True)
     
     def delete(self):
         selecteds = []
@@ -295,19 +369,21 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             
     def searching(self, status):
         if status:
-            self.searchLine.setEnabled(True)
+            self.setTopCenter("search")
+            self.actLocation.setEnabled(False)
             
             self.expOldName = self.exp.expObj.name
             self.exp.newExp("search","search")
             self.exp.changeExp("search")
             
         else:
-            self.searchLine.setEnabled(False)
-            self.searchLine.clear()
+            self.SearchLine.clear()
+            self.setTopCenter()
+            self.actLocation.setEnabled(True)
             
             self.exp.changeExp(self.expOldName)
             del self.expOldName
-        
+            
         self.refresh()
         
     def search(self, text):
@@ -340,12 +416,4 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def settings(self):
         settingsDialog = settings.SettingsForm(self.__bilge)
         settingsDialog.exec_()
-            
-            
 
-#testing lines start in here
-if __name__ == "__main__":
-    app = QtGui.QApplication(sys.argv)
-    window = MainWindow(None)
-    window.show()
-    sys.exit(app.exec_())
